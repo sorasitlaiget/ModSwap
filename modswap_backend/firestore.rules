@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // === Helper Functions ===
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isKmuttEmail() {
+      return isAuthenticated() &&
+             request.auth.token.email != null &&
+             request.auth.token.email.matches('.*@mail[.]kmutt[.]ac[.]th');
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // === Users Collection ===
+    match /users/{userId} {
+      // ทุกคนใน KMUTT อ่าน profile คนอื่นได้ (เพื่อดู rating ของผู้ขาย)
+      allow read: if isKmuttEmail();
+
+      // เขียนได้เฉพาะผ่าน Cloud Functions เท่านั้น
+      // (Frontend จะใช้ API endpoint แทน)
+      allow create, update, delete: if false;
+    }
+
+    // === ใส่ rules อื่นๆ ในอนาคต ===
+    // match /listings/{listingId} { ... }
+
+    // === Default deny ===
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

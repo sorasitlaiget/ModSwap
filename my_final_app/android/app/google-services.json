@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "20860915607",
+    "project_id": "modswap-7b425",
+    "storage_bucket": "modswap-7b425.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:20860915607:android:e3b727ae4a6dbfecd33ed2",
+        "android_client_info": {
+          "package_name": "com.example.my_final_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1FuHJS8Ghu9qkoMvBLxhLMmAulRK1mj4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,53 @@
+import { Request, Response, NextFunction } from 'express';
+import { AuthService } from './auth.service';
+import { successResponse } from '../../utils/response.util';
+
+/**
+ * Auth Controller - HTTP layer
+ * รับ request → เรียก service → ส่ง response
+ */
+export class AuthController {
+  constructor(private readonly service: AuthService) {}
+
+  /**
+   * GET /auth/me
+   * ดึง profile ของตัวเอง
+   */
+  getMyProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { uid, email } = req.user!;
+      const profile = await this.service.getMyProfile(uid, email);
+      res.json(successResponse(profile));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /auth/complete-profile
+   * เติมข้อมูล profile หลัง register
+   */
+  completeProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { uid, email } = req.user!;
+      const profile = await this.service.completeProfile(uid, email, req.body);
+      res.status(201).json(successResponse(profile));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * PATCH /auth/profile
+   * แก้ไข profile
+   */
+  updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { uid, email } = req.user!;
+      const profile = await this.service.updateProfile(uid, email, req.body);
+      res.json(successResponse(profile));
+    } catch (error) {
+      next(error);
+    }
+  };
+}
