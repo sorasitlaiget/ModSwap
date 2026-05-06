@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import '/../models/listing_mock.dart';
-import '/../theme/app_colors.dart';
+import '../../models/listing.dart';
+import '../../theme/app_colors.dart';
 
+/// Swap Request Card — shown in horizontal scroll on Home.
+/// Displays trade-type listings ("want X for Y").
 class SwapRequestCard extends StatelessWidget {
-  final SwapMock swap;
+  final Listing listing;
   final VoidCallback? onTap;
 
-  const SwapRequestCard({super.key, required this.swap, this.onTap});
+  const SwapRequestCard({super.key, required this.listing, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +22,7 @@ class SwapRequestCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -34,9 +36,14 @@ class SwapRequestCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _swapRow('Want :', swap.want),
+                  // What the user has (offering)
+                  _swapRow('Offer :', listing.title),
                   const SizedBox(height: 4),
-                  _swapRow('Offer :', swap.offer),
+                  // What the user wants
+                  _swapRow(
+                    'Want :',
+                    listing.swapPreference ?? 'Open to offers',
+                  ),
                 ],
               ),
             ),

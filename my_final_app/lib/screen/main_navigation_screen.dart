@@ -4,6 +4,8 @@ import '../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 import '../widgets/bottom_nav/mod_swap_bottom_nav.dart';
 import 'home_screen.dart';
+import 'my_items_screen.dart';
+import 'post_item_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -15,23 +17,17 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  final List<String> _pageNames = const [
-    'Home',
-    'My Item',
-    'Post Item',
-    'Notification',
-    'Menu',
-  ];
-
-  void _onTap(int index) {
+  Future<void> _onTap(int index) async {
     if (index == 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Post Item — Coming soon!'),
-          duration: Duration(seconds: 1),
-          behavior: SnackBarBehavior.floating,
-        ),
+      // Post Item — open as full screen
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const PostItemScreen()),
       );
+      if (result == true && mounted) {
+        // After successful post, go to My Items tab
+        setState(() => _currentIndex = 1);
+      }
       return;
     }
     setState(() => _currentIndex = index);
@@ -60,7 +56,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       bottomNavigationBar: ModSwapBottomNav(
         currentIndex: _currentIndex,
-        notificationCount: 3,
+        notificationCount: 0,
         onTap: _onTap,
       ),
     );
@@ -70,12 +66,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (index == 0) {
       return const HomeScreen(key: ValueKey('home'));
     }
+    if (index == 1) {
+      return MyItemsScreen(key: ValueKey('my_items_${DateTime.now().millisecondsSinceEpoch}'));
+    }
     if (index == 4) {
       return const _MenuPage(key: ValueKey('menu'));
     }
     return _PlaceholderPage(
       key: ValueKey<int>(index),
-      title: _pageNames[index],
+      title: ['Home', 'My Item', 'Post Item', 'Notification', 'Menu'][index],
     );
   }
 }
@@ -101,7 +100,7 @@ class _PlaceholderPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Page placeholder',
+            'Coming soon',
             style: TextStyle(color: AppColors.textGray),
           ),
         ],
@@ -131,10 +130,10 @@ class _MenuPage extends StatelessWidget {
             ),
           ),
           ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.logoutRed,
             ),
-            onPressed: () => Navigator.pop(ctx, true),
             child: const Text(
               'Logout',
               style: TextStyle(color: Colors.white),

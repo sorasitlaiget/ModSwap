@@ -10,16 +10,25 @@ dependencies:
   flutter:
     sdk: flutter
 
+
   # Firebase
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
   cloud_firestore: ^5.4.4
+  firebase_storage: ^12.3.0
+  url_launcher: ^6.3.0
 
   # State management
   provider: ^6.1.2
 
   # HTTP client
   dio: ^5.4.0
+
+  # Image handling
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
+  cached_network_image: ^3.4.1
+  path_provider: ^2.1.4
 
   cupertino_icons: ^1.0.8
 
@@ -31,6 +40,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - images/ModSwap.PNG
-    - images/ModFont.PNG
-    - images/KMUTT_Logo.PNG
+    - images/ModSwap.png
+    - images/ModFont.png
+    - images/KMUTT_Logo.png
+  

@@ -1,3 +1,4 @@
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -25,6 +26,10 @@ void main() async {
     FirebaseFirestore.instance.useFirestoreEmulator(
       ApiConfig.emulatorHost,
       ApiConfig.firestoreEmulatorPort,
+    );
+    FirebaseStorage.instance.useStorageEmulator(
+      ApiConfig.emulatorHost,
+      9199, // พอร์ตตรงตามไฟล์ firebase.json ของคุณเป๊ะๆ
     );
   }
 

@@ -6,8 +6,8 @@ class AppConstants {
   static const String appName = 'ModSwap';
 
   // Asset paths
-  static const String logoMascot = 'images/ModSwap.PNG';
-  static const String logoFont = 'images/ModFont.PNG';
+  static const String logoMascot = 'images/ModSwap.png';
+  static const String logoFont = 'images/ModFont.png';
 
   // Validation
   static const int passwordMinLength = 8;

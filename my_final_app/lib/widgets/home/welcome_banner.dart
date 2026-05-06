@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '/../config/constants.dart';
-import '/../theme/app_colors.dart';
+import '../../theme/app_colors.dart';
 
 /// Navy welcome banner with user name and mascot illustration
 class WelcomeBanner extends StatelessWidget {
@@ -49,11 +48,16 @@ class WelcomeBanner extends StatelessWidget {
               ],
             ),
           ),
-          // Mascot
+          const SizedBox(width: 12),
+          // Mascot — fixed to use ModSwap.png (uppercase to match pubspec.yaml)
           Image.asset(
-            AppConstants.logoMascot,
+            'images/ModSwap.png',
             width: 110,
             fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const SizedBox(
+              width: 110,
+              height: 80,
+            ),
           ),
         ],
       ),
