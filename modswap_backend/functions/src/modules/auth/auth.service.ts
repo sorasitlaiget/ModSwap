@@ -44,7 +44,9 @@ export class AuthService {
     email: string,
     dto: CompleteProfileDto
   ): Promise<UserProfileResponseDto> {
+    console.log('👉 [ด่าน 4] เข้ามาใน Service กำลังจะหา User จาก Firestore...');
     const user = await this.usersRepo.findById(uid);
+    console.log('👉 [ด่าน 5] หา User จาก Firestore เสร็จแล้ว!');
     if (!user) {
       throw new NotFoundError('User profile not found');
     }
@@ -65,8 +67,10 @@ export class AuthService {
     });
 
     logger.info('Profile completed', { uid });
-
+    
+    console.log('👉 [ด่าน 6] กำลังจะ Update ลง Firestore...');
     const updated = await this.usersRepo.findById(uid);
+    console.log('👉 [ด่าน 7] Update ลง Firestore เสร็จสมบูรณ์!');
     return this.toDto(updated!, email);
   }
 

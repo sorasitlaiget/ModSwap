@@ -37,8 +37,9 @@ export async function authMiddleware(
 
     const token = authHeader.substring(7);
 
-    // Verify token กับ Firebase
+   console.log('👉 [ด่าน 1] กำลัง Verify Token...');
     const decoded = await auth.verifyIdToken(token);
+    console.log('👉 [ด่าน 2] Verify Token ผ่านแล้ว! Email:', decoded.email);
 
     // ตรวจ email domain
     if (!decoded.email || !decoded.email.endsWith(KMUTT_EMAIL_DOMAIN)) {

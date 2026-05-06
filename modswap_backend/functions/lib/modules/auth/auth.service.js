@@ -30,7 +30,9 @@ class AuthService {
      * Frontend ต้องเรียก endpoint นี้หลัง createUserWithEmailAndPassword
      */
     async completeProfile(uid, email, dto) {
+        console.log('👉 [ด่าน 4] เข้ามาใน Service กำลังจะหา User จาก Firestore...');
         const user = await this.usersRepo.findById(uid);
+        console.log('👉 [ด่าน 5] หา User จาก Firestore เสร็จแล้ว!');
         if (!user) {
             throw new app_error_1.NotFoundError('User profile not found');
         }
@@ -45,7 +47,9 @@ class AuthService {
             lineId: dto.lineId,
         });
         logger_util_1.logger.info('Profile completed', { uid });
+        console.log('👉 [ด่าน 6] กำลังจะ Update ลง Firestore...');
         const updated = await this.usersRepo.findById(uid);
+        console.log('👉 [ด่าน 7] Update ลง Firestore เสร็จสมบูรณ์!');
         return this.toDto(updated, email);
     }
     /**

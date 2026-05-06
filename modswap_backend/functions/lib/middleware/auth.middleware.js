@@ -15,8 +15,9 @@ async function authMiddleware(req, _res, next) {
             throw new app_error_1.UnauthorizedError('Missing or invalid Authorization header');
         }
         const token = authHeader.substring(7);
-        // Verify token กับ Firebase
+        console.log('👉 [ด่าน 1] กำลัง Verify Token...');
         const decoded = await firebase_config_1.auth.verifyIdToken(token);
+        console.log('👉 [ด่าน 2] Verify Token ผ่านแล้ว! Email:', decoded.email);
         // ตรวจ email domain
         if (!decoded.email || !decoded.email.endsWith(constants_1.KMUTT_EMAIL_DOMAIN)) {
             throw new app_error_1.ForbiddenError('Access denied. KMUTT email required.', 'NOT_KMUTT_EMAIL');

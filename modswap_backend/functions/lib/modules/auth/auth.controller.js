@@ -29,11 +29,14 @@ class AuthController {
          */
         this.completeProfile = async (req, res, next) => {
             try {
+                console.log('👉 [ด่าน 3] ผ่าน Middleware เข้ามาถึง Controller แล้ว!');
                 const { uid, email } = req.user;
                 const profile = await this.service.completeProfile(uid, email, req.body);
+                console.log('👉 [ด่านสุดท้าย] Service ทำงานเสร็จ จะส่ง Response แล้ว!');
                 res.status(201).json((0, response_util_1.successResponse)(profile));
             }
             catch (error) {
+                console.error('❌ เกิด Error ใน Controller:', error);
                 next(error);
             }
         };

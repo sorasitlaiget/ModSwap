@@ -29,10 +29,15 @@ export class AuthController {
    */
   completeProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log('👉 [ด่าน 3] ผ่าน Middleware เข้ามาถึง Controller แล้ว!');
       const { uid, email } = req.user!;
+      
       const profile = await this.service.completeProfile(uid, email, req.body);
+      
+      console.log('👉 [ด่านสุดท้าย] Service ทำงานเสร็จ จะส่ง Response แล้ว!');
       res.status(201).json(successResponse(profile));
     } catch (error) {
+      console.error('❌ เกิด Error ใน Controller:', error);
       next(error);
     }
   };
