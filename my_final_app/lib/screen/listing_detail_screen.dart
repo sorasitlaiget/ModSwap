@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/listing.dart';
 import '../services/listings_service.dart';
+import '../services/wishlist_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/listing/state_badge.dart';
 import 'post_item_screen.dart';
@@ -20,15 +21,59 @@ class ListingDetailScreen extends StatefulWidget {
 
 class _ListingDetailScreenState extends State<ListingDetailScreen> {
   final _service = ListingsService();
+  final _wishlistService = WishlistService();
   Listing? _listing;
   bool _loading = true;
   String? _error;
   int _currentImageIndex = 0;
+  bool _isInWishlist = false;
+  bool _wishlistLoading = false;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _checkWishlist();
+  }
+
+  // ============================================================
+  // Wishlist actions
+  // ============================================================
+
+  Future<void> _checkWishlist() async {
+    try {
+      final inWishlist = await _wishlistService.isInWishlist(widget.listingId);
+      if (mounted) setState(() => _isInWishlist = inWishlist);
+    } catch (_) {
+      // Silently fail — UI just shows "not in wishlist"
+    }
+  }
+
+  Future<void> _toggleWishlist() async {
+    if (_wishlistLoading) return;
+    setState(() => _wishlistLoading = true);
+    try {
+      final newState = await _wishlistService.toggle(widget.listingId);
+      if (!mounted) return;
+      setState(() {
+        _isInWishlist = newState;
+        _wishlistLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            newState ? 'Added to wishlist' : 'Removed from wishlist',
+          ),
+          duration: const Duration(seconds: 2),
+          backgroundColor: AppColors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _wishlistLoading = false);
+      _showError(e.toString());
+    }
   }
 
   Future<void> _load() async {
@@ -539,7 +584,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       );
     }
 
-    // Non-owner: contact via Line
+    // Non-owner: heart (wishlist) + contact via Line
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -549,21 +594,64 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             top: BorderSide(color: AppColors.textGray.withOpacity(0.2)),
           ),
         ),
-        child: ElevatedButton.icon(
-          onPressed: () => _showLineId(l.ownerLineId),
-          icon: const Icon(Icons.chat_bubble_outline),
-          label: Text(
-            'Contact: ${l.ownerLineId}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.orange,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
+        child: Row(
+          children: [
+            // ⭐ Heart button (toggle wishlist)
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: _isInWishlist
+                      ? AppColors.orange
+                      : AppColors.textGray.withOpacity(0.4),
+                  width: 2,
+                ),
+              ),
+              child: IconButton(
+                onPressed: _wishlistLoading ? null : _toggleWishlist,
+                icon: _wishlistLoading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.orange,
+                        ),
+                      )
+                    : Icon(
+                        _isInWishlist ? Icons.favorite : Icons.favorite_border,
+                        color: _isInWishlist
+                            ? AppColors.orange
+                            : AppColors.navy,
+                        size: 26,
+                      ),
+                padding: const EdgeInsets.all(11),
+                constraints: const BoxConstraints(),
+              ),
             ),
-          ),
+            const SizedBox(width: 10),
+            // Contact button
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => _showLineId(l.ownerLineId),
+                icon: const Icon(Icons.chat_bubble_outline),
+                label: Text(
+                  'Contact: ${l.ownerLineId}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.orange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

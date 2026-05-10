@@ -6,6 +6,7 @@ import '../widgets/bottom_nav/mod_swap_bottom_nav.dart';
 import 'home_screen.dart';
 import 'my_items_screen.dart';
 import 'post_item_screen.dart';
+import 'wishlist_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -165,7 +166,7 @@ class _MenuPage extends StatelessWidget {
               const SizedBox(height: 16),
               const CircleAvatar(
                 radius: 48,
-                backgroundColor: AppColors.navy,
+                backgroundColor: AppColors.orange,
                 child: Icon(Icons.person, size: 56, color: Colors.white),
               ),
               const SizedBox(height: 16),
@@ -214,6 +215,24 @@ class _MenuPage extends StatelessWidget {
                 value: '${profile.totalTrades}',
               ),
               const SizedBox(height: 32),
+
+              // ⭐ Wishlist navigation
+              _MenuActionCard(
+                icon: Icons.favorite,
+                iconColor: AppColors.orange,
+                label: 'My Wishlist',
+                subtitle: 'Items you saved',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const WishlistScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -286,6 +305,77 @@ class _InfoCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Tappable menu card for navigation actions (e.g., Wishlist)
+class _MenuActionCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _MenuActionCard({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.softGray,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.navy,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: AppColors.textGray,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            const Icon(
+              Icons.chevron_right,
+              color: AppColors.textGray,
+            ),
+          ],
+        ),
       ),
     );
   }
