@@ -36,6 +36,17 @@ export class UsersRepository {
     return doc.exists;
   }
 
+  async findByStudentId(studentId: string, excludeUid?: string): Promise<User | null> {
+    const snapshot = await this.collection
+      .where('studentId', '==', studentId)
+      .limit(1)
+      .get();
+    if (snapshot.empty) return null;
+    const doc = snapshot.docs[0];
+    if (excludeUid && doc.id === excludeUid) return null;
+    return doc.data() as User;
+  }
+
   async update(uid: string, data: UpdateUserProfileData): Promise<void> {
     await this.collection.doc(uid).update({
       ...data,

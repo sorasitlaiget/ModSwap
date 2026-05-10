@@ -22,6 +22,10 @@ export interface UpdateProfileDto {
   photoURL?: string;
 }
 
+export interface ChangePasswordDto {
+  newPassword: string;
+}
+
 /**
  * ข้อมูล user ที่ส่งกลับให้ frontend
  */
