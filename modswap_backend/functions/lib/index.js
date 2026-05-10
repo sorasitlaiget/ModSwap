@@ -13,6 +13,7 @@ const app_1 = require("firebase-admin/app");
 const auth_routes_1 = require("./modules/auth/auth.routes");
 const listings_routes_1 = __importDefault(require("./modules/listings/listings.routes"));
 const error_handler_middleware_1 = require("./middleware/error-handler.middleware");
+const wishlist_routes_1 = __importDefault(require("./modules/wishlist/wishlist.routes"));
 // Re-export triggers
 var on_user_create_trigger_1 = require("./triggers/auth/on-user-create.trigger");
 Object.defineProperty(exports, "onUserCreate", { enumerable: true, get: function () { return on_user_create_trigger_1.onUserCreate; } });
@@ -30,6 +31,7 @@ app.get('/health', (_, res) => {
 // 🎯 แก้ตรงนี้ครับ เติมวงเล็บ ()
 app.use('/auth', (0, auth_routes_1.createAuthRouter)());
 app.use('/listings', listings_routes_1.default);
+app.use('/wishlist', wishlist_routes_1.default);
 // Error handler (must be last)
 app.use(error_handler_middleware_1.errorHandlerMiddleware);
 // Export the API
