@@ -11,6 +11,7 @@ exports.COLLECTIONS = {
     DEALS: 'deals',
     TRADES: 'trades',
     REVIEWS: 'reviews',
+    PENDING_RATINGS: 'pendingRatings',
 };
 exports.USER_ROLES = {
     STUDENT: 'student',

@@ -1,13 +1,14 @@
 import { Timestamp } from 'firebase-admin/firestore';
 import { firestore } from '../../config/firebase.config';
 import { COLLECTIONS } from '../../config/constants';
-import { Deal, CreateDealData } from './deals.types';
+import { Deal, CreateDealData, PendingRating, CreatePendingRatingData } from './deals.types';
 
 /**
- * Deals Repository — pure data access for 'deals' collection
+ * Deals Repository — pure data access for 'deals' and 'pendingRatings' collections
  */
 export class DealsRepository {
   private readonly collection = firestore.collection(COLLECTIONS.DEALS);
+  private readonly pendingRatingsCollection = firestore.collection(COLLECTIONS.PENDING_RATINGS);
 
   async create(data: CreateDealData): Promise<Deal> {
     const docRef = this.collection.doc();
@@ -37,5 +38,13 @@ export class DealsRepository {
       .get();
     if (snap.empty) return null;
     return snap.docs[0].data() as Deal;
+  }
+
+  async createPendingRating(data: CreatePendingRatingData): Promise<PendingRating> {
+    const docRef = this.pendingRatingsCollection.doc();
+    const now = Timestamp.now();
+    const pending: PendingRating = { ...data, id: docRef.id, createdAt: now };
+    await docRef.set(pending);
+    return pending;
   }
 }

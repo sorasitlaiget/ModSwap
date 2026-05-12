@@ -76,6 +76,21 @@ export class DealsService {
       dealType: dto.dealType,
     });
 
+    // Fire-and-forget: notify buyer by creating a pending rating document
+    this.usersRepo.findByLineId(dto.buyerLineId).then(async (buyer) => {
+      if (!buyer || buyer.id === uid) return;
+      const seller = await this.usersRepo.findById(uid);
+      await this.dealsRepo.createPendingRating({
+        buyerUid: buyer.id,
+        sellerId: uid,
+        sellerName: seller?.displayName ?? 'Unknown',
+        listingId,
+        listingTitle: listing.title,
+      });
+    }).catch((err) => {
+      logger.warn('Failed to create pending rating', { error: err });
+    });
+
     const updatedListing = await this.listingsRepo.findById(listingId);
     return {
       deal: this.dealToDto(deal),

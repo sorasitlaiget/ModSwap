@@ -1,14 +1,19 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/mock_notifications.dart';
+import '../services/rating_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/bottom_nav/mod_swap_bottom_nav.dart';
+import '../widgets/rating/rating_sheet.dart';
 import 'home_screen.dart';
 import 'my_items_screen.dart';
+import 'notification_screen.dart';
 import 'post_item_screen.dart';
 import 'wishlist_screen.dart';
-import '../services/mock_notifications.dart';
-import 'notification_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -19,6 +24,50 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
+  final _ratingService = RatingService();
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _ratingSubscription;
+  bool _showingRatingPopup = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _listenPendingRatings();
+  }
+
+  @override
+  void dispose() {
+    _ratingSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _listenPendingRatings() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    _ratingSubscription = _ratingService.pendingRatingsStream(uid).listen((snapshot) {
+      for (final change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.added && !_showingRatingPopup) {
+          final data = change.doc.data()!;
+          _showingRatingPopup = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              isDismissible: false,
+              backgroundColor: Colors.transparent,
+              builder: (_) => RatingSheet(
+                pendingRatingId: change.doc.id,
+                sellerName: data['sellerName'] as String? ?? '',
+                listingTitle: data['listingTitle'] as String? ?? '',
+              ),
+            ).then((_) => _showingRatingPopup = false);
+          });
+          break;
+        }
+      }
+    });
+  }
 
   Future<void> _onTap(int index) async {
     if (index == 2) {

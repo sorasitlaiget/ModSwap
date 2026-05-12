@@ -36,6 +36,15 @@ export class UsersRepository {
     return doc.exists;
   }
 
+  async findByLineId(lineId: string): Promise<User | null> {
+    const snapshot = await this.collection
+      .where('lineId', '==', lineId)
+      .limit(1)
+      .get();
+    if (snapshot.empty) return null;
+    return snapshot.docs[0].data() as User;
+  }
+
   async findByStudentId(studentId: string, excludeUid?: string): Promise<User | null> {
     const snapshot = await this.collection
       .where('studentId', '==', studentId)

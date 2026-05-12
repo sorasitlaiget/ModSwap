@@ -10,6 +10,7 @@ export const COLLECTIONS = {
   DEALS: 'deals',
   TRADES: 'trades',
   REVIEWS: 'reviews',
+  PENDING_RATINGS: 'pendingRatings',
 } as const;
 
 export const USER_ROLES = {

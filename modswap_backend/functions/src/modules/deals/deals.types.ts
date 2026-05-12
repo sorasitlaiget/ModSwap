@@ -27,3 +27,15 @@ export interface Deal {
 }
 
 export type CreateDealData = Omit<Deal, 'id' | 'createdAt'>;
+
+export interface PendingRating {
+  id: string;
+  buyerUid: string;
+  sellerId: string;
+  sellerName: string;
+  listingId: string;
+  listingTitle: string;
+  createdAt: Timestamp;
+}
+
+export type CreatePendingRatingData = Omit<PendingRating, 'id' | 'createdAt'>;
