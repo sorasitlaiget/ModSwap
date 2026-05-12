@@ -7,6 +7,8 @@ import 'home_screen.dart';
 import 'my_items_screen.dart';
 import 'post_item_screen.dart';
 import 'wishlist_screen.dart';
+import '../services/mock_notifications.dart';
+import 'notification_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -56,10 +58,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         child: _buildPage(_currentIndex),
       ),
       bottomNavigationBar: ModSwapBottomNav(
-        currentIndex: _currentIndex,
-        notificationCount: 0,
-        onTap: _onTap,
-      ),
+      currentIndex: _currentIndex,
+      notificationCount: MockNotifications.unreadCount(),  // ← เปลี่ยน
+      onTap: _onTap,
+    ),
     );
   }
 
@@ -69,6 +71,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     }
     if (index == 1) {
       return MyItemsScreen(key: ValueKey('my_items_${DateTime.now().millisecondsSinceEpoch}'));
+    }
+    if (index == 3) {                                       // ← เพิ่ม block นี้
+      return const NotificationScreen(key: ValueKey('notification'));
     }
     if (index == 4) {
       return const _MenuPage(key: ValueKey('menu'));
