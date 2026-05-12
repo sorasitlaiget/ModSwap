@@ -36,6 +36,15 @@ class UsersRepository {
         const doc = await this.collection.doc(uid).get();
         return doc.exists;
     }
+    async findByLineId(lineId) {
+        const snapshot = await this.collection
+            .where('lineId', '==', lineId)
+            .limit(1)
+            .get();
+        if (snapshot.empty)
+            return null;
+        return snapshot.docs[0].data();
+    }
     async findByStudentId(studentId, excludeUid) {
         const snapshot = await this.collection
             .where('studentId', '==', studentId)

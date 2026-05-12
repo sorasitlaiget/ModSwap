@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../models/listing.dart';
 import '../services/listings_service.dart';
+import '../services/rating_service.dart';
 import '../services/storage_service.dart';
 import '../services/wishlist_service.dart';
 import '../theme/app_colors.dart';
@@ -27,6 +28,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   final _service = ListingsService();
   final _wishlistService = WishlistService();
   final _storageService = StorageService();
+  final _ratingService = RatingService();
   Listing? _listing;
   bool _loading = true;
   String? _error;
@@ -93,15 +95,6 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         _listing = l;
         _loading = false;
       });
-      // Buyer opens a sold listing → show rating sheet on top of detail
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      final isBuyer = uid != null && l.ownerId != uid;
-      if (isBuyer && l.isSold) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          _showRatingSheet(l);
-        });
-      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -116,18 +109,6 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     return uid != null && _listing?.ownerId == uid;
   }
 
-  void _showRatingSheet(Listing l) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _RatingSheet(
-        sellerHandle: '@${l.ownerName}',
-        sellerName: l.ownerName,
-        itemTitle: l.title,
-      ),
-    );
-  }
 
   // ============================================================
   // Owner actions
@@ -182,6 +163,10 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         whatIGotReturn: formData.whatIGotReturn,
         swapItemPhotoURL: swapPhotoUrl,
       );
+
+      // Fire-and-forget: notify buyer via Firestore pending rating
+      _createPendingRatingForBuyer(formData.buyerLineId);
+
       if (mounted) {
         _showSuccess('Marked as sold');
         Navigator.pop(context, true);
@@ -190,6 +175,21 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       if (mounted) _showError(e.toString());
       setState(() => _loading = false);
     }
+  }
+
+  void _createPendingRatingForBuyer(String buyerLineId) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || _listing == null) return;
+    _ratingService.findBuyerUidByLineId(buyerLineId).then((buyerUid) {
+      if (buyerUid == null || buyerUid == uid) return;
+      _ratingService.createPendingRating(
+        buyerUid: buyerUid,
+        sellerId: uid,
+        sellerName: _listing!.ownerName,
+        listingId: _listing!.id,
+        listingTitle: _listing!.title,
+      );
+    }).catchError((_) {});
   }
 
   Future<_DealFormData?> _showMarkSoldSheet(Listing listing) {

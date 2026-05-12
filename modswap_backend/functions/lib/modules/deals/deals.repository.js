@@ -5,11 +5,12 @@ const firestore_1 = require("firebase-admin/firestore");
 const firebase_config_1 = require("../../config/firebase.config");
 const constants_1 = require("../../config/constants");
 /**
- * Deals Repository — pure data access for 'deals' collection
+ * Deals Repository — pure data access for 'deals' and 'pendingRatings' collections
  */
 class DealsRepository {
     constructor() {
         this.collection = firebase_config_1.firestore.collection(constants_1.COLLECTIONS.DEALS);
+        this.pendingRatingsCollection = firebase_config_1.firestore.collection(constants_1.COLLECTIONS.PENDING_RATINGS);
     }
     async create(data) {
         const docRef = this.collection.doc();
@@ -39,6 +40,13 @@ class DealsRepository {
         if (snap.empty)
             return null;
         return snap.docs[0].data();
+    }
+    async createPendingRating(data) {
+        const docRef = this.pendingRatingsCollection.doc();
+        const now = firestore_1.Timestamp.now();
+        const pending = { ...data, id: docRef.id, createdAt: now };
+        await docRef.set(pending);
+        return pending;
     }
 }
 exports.DealsRepository = DealsRepository;
