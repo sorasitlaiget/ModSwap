@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'config/api_config.dart';
 import 'providers/auth_provider.dart';
+import 'providers/theme_provider.dart';
 import 'screen/auth_gate.dart';
 import 'theme/app_colors.dart';
 
@@ -50,22 +51,54 @@ class ModSwapApp extends StatelessWidget {
   Widget build(BuildContext context) {
     debugPrint('[ModSwapApp] building');
 
-    return ChangeNotifierProvider<AuthState>.value(
-      value: authState,
-      child: MaterialApp(
-        title: 'ModSwap',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primaryColor: AppColors.orange,
-          scaffoldBackgroundColor: Colors.white,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: AppColors.orange,
-            primary: AppColors.orange,
-            secondary: AppColors.navy,
-          ),
-          useMaterial3: true,
-        ),
-        home: const AuthGate(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthState>.value(value: authState),
+        ChangeNotifierProvider<ThemeProvider>(create: (_) => ThemeProvider()),
+      ],
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'ModSwap',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              brightness: Brightness.light,
+              primaryColor: AppColors.orange,
+              scaffoldBackgroundColor: Colors.white,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppColors.orange,
+                primary: AppColors.orange,
+                secondary: AppColors.navy,
+                brightness: Brightness.light,
+              ),
+              useMaterial3: true,
+            ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              primaryColor: AppColors.orange,
+              scaffoldBackgroundColor: const Color(0xFF121212),
+              canvasColor: const Color(0xFF1E1E1E),
+              cardColor: const Color(0xFF1E1E1E),
+              dividerColor: const Color(0xFF2A2A2A),
+              dialogBackgroundColor: const Color(0xFF1E1E1E),
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppColors.orange,
+                primary: AppColors.orange,
+                secondary: AppColors.navy,
+                surface: const Color(0xFF1E1E1E),
+                brightness: Brightness.dark,
+              ),
+              textTheme: const TextTheme().apply(
+                bodyColor: Colors.white,
+                displayColor: Colors.white,
+              ),
+              iconTheme: const IconThemeData(color: Colors.white),
+              useMaterial3: true,
+            ),
+            themeMode: themeProvider.mode,
+            home: const AuthGate(),
+          );
+        },
       ),
     );
   }

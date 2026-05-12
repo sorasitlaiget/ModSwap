@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_theme_ext.dart';
 
 /// One item in the bottom NavBar (Home, My Item, Notification, Menu).
 class NavItem extends StatelessWidget {
@@ -24,7 +25,7 @@ class NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? AppColors.orange : AppColors.navy;
+    final color = isActive ? AppColors.orange : context.primaryText;
 
     return Expanded(
       child: InkWell(

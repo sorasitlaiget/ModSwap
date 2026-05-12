@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../models/listing.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_theme_ext.dart';
 
 class ListingCard extends StatelessWidget {
   final Listing listing;
@@ -21,7 +22,7 @@ class ListingCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -113,10 +114,10 @@ class ListingCard extends StatelessWidget {
                 children: [
                   Text(
                     listing.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.navy,
+                      color: context.primaryText,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
