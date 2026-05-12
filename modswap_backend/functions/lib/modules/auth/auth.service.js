@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const app_error_1 = require("../../core/errors/app-error");
 const logger_util_1 = require("../../utils/logger.util");
+const firebase_config_1 = require("../../config/firebase.config");
 /**
  * Auth Service - business logic สำหรับ profile management
  *
@@ -54,16 +55,60 @@ class AuthService {
     }
     /**
      * แก้ไข profile (หลังจาก complete แล้ว)
+     * - เช็คเฉพาะ field ที่เปลี่ยนจริง
+     * - ตรวจ studentId ซ้ำกับ user อื่น
      */
     async updateProfile(uid, email, dto) {
-        const user = await this.usersRepo.findById(uid);
-        if (!user) {
+        const current = await this.usersRepo.findById(uid);
+        if (!current) {
             throw new app_error_1.NotFoundError('User profile not found');
         }
-        await this.usersRepo.update(uid, dto);
-        logger_util_1.logger.info('Profile updated', { uid });
+        // เอาเฉพาะ field ที่ส่งมาและมีค่าต่างจากปัจจุบัน
+        const changes = this.detectChanges(current, dto);
+        if (!changes) {
+            return this.toDto(current, email);
+        }
+        // ตรวจ studentId ซ้ำกับ user อื่น
+        if (changes.studentId) {
+            const conflict = await this.usersRepo.findByStudentId(changes.studentId, uid);
+            if (conflict) {
+                throw new app_error_1.ConflictError('Student ID is already in use', 'STUDENT_ID_CONFLICT');
+            }
+        }
+        await this.usersRepo.update(uid, changes);
+        logger_util_1.logger.info('Profile updated', { uid, fields: Object.keys(changes) });
         const updated = await this.usersRepo.findById(uid);
         return this.toDto(updated, email);
+    }
+    /**
+     * เปลี่ยน password ผ่าน Firebase Auth Admin SDK
+     */
+    async changePassword(uid, dto) {
+        await firebase_config_1.auth.updateUser(uid, { password: dto.newPassword });
+        logger_util_1.logger.info('Password changed', { uid });
+    }
+    /**
+     * เปรียบเทียบ dto กับข้อมูลปัจจุบัน → return เฉพาะ field ที่เปลี่ยน
+     * ถ้าไม่มีอะไรเปลี่ยนเลย → return null
+     */
+    detectChanges(current, dto) {
+        const changes = {};
+        if (dto.displayName !== undefined && dto.displayName !== current.displayName) {
+            changes.displayName = dto.displayName;
+        }
+        if (dto.studentId !== undefined && dto.studentId !== current.studentId) {
+            changes.studentId = dto.studentId;
+        }
+        if (dto.faculty !== undefined && dto.faculty !== current.faculty) {
+            changes.faculty = dto.faculty;
+        }
+        if (dto.lineId !== undefined && dto.lineId !== current.lineId) {
+            changes.lineId = dto.lineId;
+        }
+        if (dto.photoURL !== undefined && dto.photoURL !== current.photoURL) {
+            changes.photoURL = dto.photoURL ?? null;
+        }
+        return Object.keys(changes).length > 0 ? changes : null;
     }
     /**
      * แปลง Domain Model → Response DTO
