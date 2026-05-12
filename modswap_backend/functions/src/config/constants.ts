@@ -7,6 +7,7 @@ export const KMUTT_EMAIL_DOMAIN = '@mail.kmutt.ac.th';
 export const COLLECTIONS = {
   USERS: 'users',
   LISTINGS: 'listings',
+  DEALS: 'deals',
   TRADES: 'trades',
   REVIEWS: 'reviews',
 } as const;

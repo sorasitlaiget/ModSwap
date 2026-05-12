@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { createAuthRouter } from './modules/auth/auth.routes';
+import listingsRouter from './modules/listings/listings.routes';
 import { errorHandlerMiddleware } from './middleware/error-handler.middleware';
 
 /**
@@ -20,9 +21,7 @@ export function createApp(): express.Application {
 
   // === Routes ===
   app.use('/auth', createAuthRouter());
-
-  // ✏️ ใส่ routes อื่นๆ ที่นี่ในอนาคต
-  // app.use('/listings', createListingsRouter());
+  app.use('/listings', listingsRouter);
 
   // === Error handler (ต้องอยู่ "ท้ายสุด") ===
   app.use(errorHandlerMiddleware);

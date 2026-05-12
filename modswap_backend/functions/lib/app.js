@@ -7,6 +7,7 @@ exports.createApp = createApp;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const auth_routes_1 = require("./modules/auth/auth.routes");
+const listings_routes_1 = __importDefault(require("./modules/listings/listings.routes"));
 const error_handler_middleware_1 = require("./middleware/error-handler.middleware");
 /**
  * สร้าง Express app และ mount routes ทั้งหมด
@@ -22,8 +23,7 @@ function createApp() {
     });
     // === Routes ===
     app.use('/auth', (0, auth_routes_1.createAuthRouter)());
-    // ✏️ ใส่ routes อื่นๆ ที่นี่ในอนาคต
-    // app.use('/listings', createListingsRouter());
+    app.use('/listings', listings_routes_1.default);
     // === Error handler (ต้องอยู่ "ท้ายสุด") ===
     app.use(error_handler_middleware_1.errorHandlerMiddleware);
     return app;

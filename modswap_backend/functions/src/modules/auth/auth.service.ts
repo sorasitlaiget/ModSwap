@@ -1,12 +1,14 @@
 import { UsersRepository } from '../users/users.repository';
-import { User } from '../users/users.types';
+import { User, UpdateUserProfileData } from '../users/users.types';
 import {
   CompleteProfileDto,
   UpdateProfileDto,
+  ChangePasswordDto,
   UserProfileResponseDto,
 } from './dto/auth.dto';
 import { NotFoundError, ConflictError } from '../../core/errors/app-error';
 import { logger } from '../../utils/logger.util';
+import { auth } from '../../config/firebase.config';
 
 /**
  * Auth Service - business logic สำหรับ profile management
@@ -76,22 +78,72 @@ export class AuthService {
 
   /**
    * แก้ไข profile (หลังจาก complete แล้ว)
+   * - เช็คเฉพาะ field ที่เปลี่ยนจริง
+   * - ตรวจ studentId ซ้ำกับ user อื่น
    */
   async updateProfile(
     uid: string,
     email: string,
     dto: UpdateProfileDto
   ): Promise<UserProfileResponseDto> {
-    const user = await this.usersRepo.findById(uid);
-    if (!user) {
+    const current = await this.usersRepo.findById(uid);
+    if (!current) {
       throw new NotFoundError('User profile not found');
     }
 
-    await this.usersRepo.update(uid, dto);
-    logger.info('Profile updated', { uid });
+    // เอาเฉพาะ field ที่ส่งมาและมีค่าต่างจากปัจจุบัน
+    const changes = this.detectChanges(current, dto);
+    if (!changes) {
+      return this.toDto(current, email);
+    }
+
+    // ตรวจ studentId ซ้ำกับ user อื่น
+    if (changes.studentId) {
+      const conflict = await this.usersRepo.findByStudentId(changes.studentId, uid);
+      if (conflict) {
+        throw new ConflictError('Student ID is already in use', 'STUDENT_ID_CONFLICT');
+      }
+    }
+
+    await this.usersRepo.update(uid, changes);
+    logger.info('Profile updated', { uid, fields: Object.keys(changes) });
 
     const updated = await this.usersRepo.findById(uid);
     return this.toDto(updated!, email);
+  }
+
+  /**
+   * เปลี่ยน password ผ่าน Firebase Auth Admin SDK
+   */
+  async changePassword(uid: string, dto: ChangePasswordDto): Promise<void> {
+    await auth.updateUser(uid, { password: dto.newPassword });
+    logger.info('Password changed', { uid });
+  }
+
+  /**
+   * เปรียบเทียบ dto กับข้อมูลปัจจุบัน → return เฉพาะ field ที่เปลี่ยน
+   * ถ้าไม่มีอะไรเปลี่ยนเลย → return null
+   */
+  private detectChanges(current: User, dto: UpdateProfileDto): UpdateUserProfileData | null {
+    const changes: UpdateUserProfileData = {};
+
+    if (dto.displayName !== undefined && dto.displayName !== current.displayName) {
+      changes.displayName = dto.displayName;
+    }
+    if (dto.studentId !== undefined && dto.studentId !== current.studentId) {
+      changes.studentId = dto.studentId;
+    }
+    if (dto.faculty !== undefined && dto.faculty !== current.faculty) {
+      changes.faculty = dto.faculty;
+    }
+    if (dto.lineId !== undefined && dto.lineId !== current.lineId) {
+      changes.lineId = dto.lineId;
+    }
+    if (dto.photoURL !== undefined && dto.photoURL !== current.photoURL) {
+      changes.photoURL = dto.photoURL ?? null;
+    }
+
+    return Object.keys(changes).length > 0 ? changes : null;
   }
 
   /**

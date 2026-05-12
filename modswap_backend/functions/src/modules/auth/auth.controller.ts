@@ -55,4 +55,18 @@ export class AuthController {
       next(error);
     }
   };
+
+  /**
+   * PATCH /auth/password
+   * เปลี่ยน password
+   */
+  changePassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { uid } = req.user!;
+      await this.service.changePassword(uid, req.body);
+      res.json(successResponse({ message: 'Password changed successfully' }));
+    } catch (error) {
+      next(error);
+    }
+  };
 }

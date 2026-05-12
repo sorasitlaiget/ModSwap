@@ -36,9 +36,27 @@ class UsersRepository {
         const doc = await this.collection.doc(uid).get();
         return doc.exists;
     }
+    async findByStudentId(studentId, excludeUid) {
+        const snapshot = await this.collection
+            .where('studentId', '==', studentId)
+            .limit(1)
+            .get();
+        if (snapshot.empty)
+            return null;
+        const doc = snapshot.docs[0];
+        if (excludeUid && doc.id === excludeUid)
+            return null;
+        return doc.data();
+    }
     async update(uid, data) {
         await this.collection.doc(uid).update({
             ...data,
+            updatedAt: firestore_1.Timestamp.now(),
+        });
+    }
+    async incrementTotalTrades(uid) {
+        await this.collection.doc(uid).update({
+            totalTrades: firestore_1.FieldValue.increment(1),
             updatedAt: firestore_1.Timestamp.now(),
         });
     }
