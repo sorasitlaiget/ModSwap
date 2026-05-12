@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme_ext.dart';
 import 'nav_item.dart';
 import 'post_item_button.dart';
 
@@ -22,7 +23,7 @@ class ModSwapBottomNav extends StatelessWidget {
       child: Container(
         height: 76,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.06),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/listing.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_theme_ext.dart';
 
 /// Swap Request Card — shown in horizontal scroll on Home.
 /// Displays trade-type listings ("want X for Y").
@@ -18,7 +19,7 @@ class SwapRequestCard extends StatelessWidget {
         width: 200,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(

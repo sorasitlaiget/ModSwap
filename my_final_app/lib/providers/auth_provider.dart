@@ -217,6 +217,35 @@ class AuthState extends ChangeNotifier {
     await _fetchProfile();
   }
 
+  /// PATCH any subset of profile fields. Pass null to skip a field.
+  /// Returns updated profile; also stored in state and notifies listeners.
+  Future<UserProfile> updateProfile({
+    String? displayName,
+    String? studentId,
+    String? faculty,
+    String? lineId,
+  }) async {
+    final updated = await _apiService.updateProfile(
+      displayName: displayName,
+      studentId: studentId,
+      faculty: faculty,
+      lineId: lineId,
+    );
+    _profile = updated;
+    notifyListeners();
+    return updated;
+  }
+
+  /// Change Firebase Auth password. May throw if recent login is required —
+  /// caller should catch and prompt the user to log in again.
+  Future<void> updatePassword(String newPassword) async {
+    final user = _authService.currentUser;
+    if (user == null) {
+      throw Exception('Not signed in.');
+    }
+    await user.updatePassword(newPassword);
+  }
+
   @override
   void dispose() {
     _authSubscription?.cancel();

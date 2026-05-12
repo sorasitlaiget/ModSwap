@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
+import '../services/listings_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme_ext.dart';
 import '../widgets/bottom_nav/mod_swap_bottom_nav.dart';
+import '../widgets/home/home_header.dart';
 import 'home_screen.dart';
 import 'my_items_screen.dart';
 import 'post_item_screen.dart';
 import 'wishlist_screen.dart';
+import 'edit_profile_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -37,7 +42,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F3F7),
+      backgroundColor: context.appBg,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 280),
         switchInCurve: Curves.easeOut,
@@ -110,8 +115,38 @@ class _PlaceholderPage extends StatelessWidget {
   }
 }
 
-class _MenuPage extends StatelessWidget {
+// ===========================================================================
+// MENU PAGE — redesigned to match Figma reference
+// (profile card + stats row + MY ACTIVITY list + Logout)
+// ===========================================================================
+class _MenuPage extends StatefulWidget {
   const _MenuPage({super.key});
+
+  @override
+  State<_MenuPage> createState() => _MenuPageState();
+}
+
+class _MenuPageState extends State<_MenuPage> {
+  final _listingsService = ListingsService();
+  int? _itemsCount; // null = loading; int = loaded
+
+  @override
+  void initState() {
+    super.initState();
+    _loadItemsCount();
+  }
+
+  Future<void> _loadItemsCount() async {
+    try {
+      // Backend caps limit at 50.
+      final all = await _listingsService.getMyListings(state: 'all', limit: 50);
+      if (!mounted) return;
+      setState(() => _itemsCount = all.length);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _itemsCount = 0);
+    }
+  }
 
   Future<void> _logout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -157,151 +192,252 @@ class _MenuPage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-              const CircleAvatar(
-                radius: 48,
-                backgroundColor: AppColors.orange,
-                child: Icon(Icons.person, size: 56, color: Colors.white),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                profile.displayName,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.navy,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                profile.email,
-                style: const TextStyle(color: AppColors.textGray),
-              ),
-              const SizedBox(height: 32),
-              _InfoCard(
-                icon: Icons.badge_outlined,
-                label: 'Student ID',
-                value: profile.studentId ?? '-',
-              ),
-              const SizedBox(height: 8),
-              _InfoCard(
-                icon: Icons.school_outlined,
-                label: 'Faculty',
-                value: profile.faculty ?? '-',
-              ),
-              const SizedBox(height: 8),
-              _InfoCard(
-                icon: Icons.chat_outlined,
-                label: 'Line ID',
-                value: profile.lineId ?? '-',
-              ),
-              const SizedBox(height: 8),
-              _InfoCard(
-                icon: Icons.star_outline,
-                label: 'Rating',
-                value:
-                    '${profile.rating.toStringAsFixed(1)} (${profile.totalReviews} reviews)',
-              ),
-              const SizedBox(height: 8),
-              _InfoCard(
-                icon: Icons.swap_horiz,
-                label: 'Total Trades',
-                value: '${profile.totalTrades}',
-              ),
-              const SizedBox(height: 32),
+      backgroundColor: context.appBg,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // ── White top header: same widget used on Home page ──────────────
+            const HomeHeader(),
 
-              // ⭐ Wishlist navigation
-              _MenuActionCard(
-                icon: Icons.favorite,
-                iconColor: AppColors.orange,
-                label: 'My Wishlist',
-                subtitle: 'Items you saved',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const WishlistScreen(),
-                    ),
-                  );
-                },
+            // ── Navy section: profile summary + stats ────────────────────────
+            Container(
+              width: double.infinity,
+              color: AppColors.navy,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+              child: Column(
+                children: [
+                  _ProfileSummaryCard(
+                    displayName: profile.displayName,
+                    email: profile.email,
+                    studentId: profile.studentId,
+                    onEdit: () async {
+                      final updated = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EditProfileScreen(),
+                        ),
+                      );
+                      if (updated == true && context.mounted) {
+                        // Profile already updated in AuthState; widget will rebuild.
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          value: _itemsCount?.toString() ?? '…',
+                          label: 'Items',
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _StatCard(
+                          value: profile.rating.toStringAsFixed(1),
+                          label: 'Rating',
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _StatCard(
+                          value: '${profile.totalTrades}',
+                          label: 'Swaps',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
+            ),
 
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.logoutRed),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+            // ── Light section: activity list + logout ────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _SectionHeader(title: 'MY ACTIVITY'),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: context.cardBg,
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    backgroundColor: AppColors.logoutBg,
-                  ),
-                  onPressed: () => _logout(context),
-                  icon: const Icon(Icons.logout, color: AppColors.logoutRed),
-                  label: const Text(
-                    'Logout',
-                    style: TextStyle(
-                      color: AppColors.logoutRed,
-                      fontWeight: FontWeight.bold,
+                    child: Column(
+                      children: [
+                        _MenuRow(
+                          icon: Icons.inventory_2_outlined,
+                          label: 'My Item',
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const MyItemsScreen(initialTabIndex: 1),
+                              ),
+                            );
+                            _loadItemsCount();
+                          },
+                        ),
+                        const _RowDivider(),
+                        _MenuRow(
+                          icon: Icons.favorite_border,
+                          label: 'Wishlist',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const WishlistScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const _RowDivider(),
+                        // Dark Mode toggle — uses ThemeProvider to switch themes app-wide.
+                        Consumer<ThemeProvider>(
+                          builder: (context, themeProvider, _) {
+                            return _MenuRow(
+                              icon: Icons.dark_mode_outlined,
+                              label: 'Dark Mode',
+                              onTap: () => themeProvider.toggle(!themeProvider.isDark),
+                              trailing: Switch(
+                                value: themeProvider.isDark,
+                                onChanged: themeProvider.toggle,
+                                activeColor: Colors.white,
+                                activeTrackColor: AppColors.orange,
+                                inactiveThumbColor: Colors.white,
+                                inactiveTrackColor: const Color(0xFFD1D5DB),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                ),
+
+                  const SizedBox(height: 28),
+
+                  // Logout button (centered, pill-shaped)
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () => _logout(context),
+                      icon: const Icon(
+                        Icons.logout,
+                        color: AppColors.logoutRed,
+                        size: 20,
+                      ),
+                      label: const Text(
+                        'Logout',
+                        style: TextStyle(
+                          color: AppColors.logoutRed,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        backgroundColor: AppColors.logoutBg,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 36,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
+/// White profile card sitting on the navy section.
+/// Avatar + name + email + ID + Edit button.
+class _ProfileSummaryCard extends StatelessWidget {
+  final String displayName;
+  final String email;
+  final String? studentId;
+  final VoidCallback onEdit;
 
-  const _InfoCard({
-    required this.icon,
-    required this.label,
-    required this.value,
+  const _ProfileSummaryCard({
+    required this.displayName,
+    required this.email,
+    required this.studentId,
+    required this.onEdit,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.softGray,
-        borderRadius: BorderRadius.circular(16),
+        color: context.cardBg,
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.navy),
+          const CircleAvatar(
+            radius: 26,
+            backgroundColor: AppColors.orange,
+            child: Icon(Icons.person, color: Colors.white, size: 30),
+          ),
           const SizedBox(width: 12),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textGray,
-              fontSize: 13,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayName,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: context.primaryText,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  email,
+                  style: TextStyle(
+                    color: context.secondaryText,
+                    fontSize: 11,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (studentId != null && studentId!.isNotEmpty)
+                  Text(
+                    'ID: $studentId',
+                    style: TextStyle(
+                      color: context.secondaryText,
+                      fontSize: 11,
+                    ),
+                  ),
+              ],
             ),
           ),
-          const Spacer(),
-          Flexible(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: AppColors.navy,
+          const SizedBox(width: 8),
+          Material(
+            color: AppColors.logoutBg,
+            borderRadius: BorderRadius.circular(10),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: onEdit,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  'Edit',
+                  style: TextStyle(
+                    color: AppColors.orange,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
               ),
-              textAlign: TextAlign.end,
             ),
           ),
         ],
@@ -310,73 +446,131 @@ class _InfoCard extends StatelessWidget {
   }
 }
 
-/// Tappable menu card for navigation actions (e.g., Wishlist)
-class _MenuActionCard extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
+/// Single navy-tinted stat card used in the row (Items / Rating / Swaps).
+class _StatCard extends StatelessWidget {
+  final String value;
   final String label;
-  final String subtitle;
-  final VoidCallback onTap;
 
-  const _MenuActionCard({
+  const _StatCard({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1F2966), // slightly lighter navy
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Small uppercase label above a grouped menu card (e.g., "MY ACTIVITY").
+class _SectionHeader extends StatelessWidget {
+  final String title;
+
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: AppColors.textGray,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.6,
+        ),
+      ),
+    );
+  }
+}
+
+/// Single row inside a grouped menu card.
+/// Default trailing is a chevron arrow; pass [trailing] to override
+/// (e.g. a Switch for the Dark Mode toggle).
+class _MenuRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Widget? trailing;
+
+  const _MenuRow({
     required this.icon,
-    required this.iconColor,
     required this.label,
-    required this.subtitle,
     required this.onTap,
+    this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
+    final tail = trailing ??
+        const Icon(
+          Icons.chevron_right,
+          color: AppColors.textGray,
+          size: 22,
+        );
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.softGray,
-          borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: trailing != null ? 6 : 14,
         ),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+            Icon(icon, color: context.primaryText, size: 22),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: context.primaryText,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              child: Icon(icon, color: iconColor),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.navy,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: AppColors.textGray,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            const Icon(
-              Icons.chevron_right,
-              color: AppColors.textGray,
-            ),
+            tail,
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Thin divider line between rows in a grouped menu card.
+class _RowDivider extends StatelessWidget {
+  const _RowDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 1,
+      margin: const EdgeInsets.only(left: 52),
+      color: context.divider,
     );
   }
 }

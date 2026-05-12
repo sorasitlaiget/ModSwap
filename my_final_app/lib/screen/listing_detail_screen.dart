@@ -5,6 +5,7 @@ import '../models/listing.dart';
 import '../services/listings_service.dart';
 import '../services/wishlist_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme_ext.dart';
 import '../widgets/listing/state_badge.dart';
 import 'post_item_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -226,7 +227,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.cardBg,
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.orange))
