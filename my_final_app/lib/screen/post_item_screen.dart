@@ -4,6 +4,7 @@ import '../models/listing.dart';
 import '../services/listings_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme_ext.dart';
 import '../widgets/listing/image_picker_grid.dart';
 import '../widgets/listing/meeting_point_picker.dart';
 
@@ -226,7 +227,7 @@ class _PostItemScreenState extends State<PostItemScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.cardBg,
       appBar: AppBar(
         backgroundColor: AppColors.navy,
         elevation: 0,

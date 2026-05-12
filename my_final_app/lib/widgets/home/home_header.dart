@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_theme_ext.dart';
 
 /// Header bar with KMUTT logo, MODSWAP text, and user avatar
 class HomeHeader extends StatelessWidget {
@@ -10,7 +11,7 @@ class HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: context.cardBg,
       // 🎯 แก้ตรงนี้ที่ 1: ลบ height: 70 ออก แล้วใช้ SafeArea + padding บนล่างแทน เพื่อไม่ให้ชนแบตเตอรี่
       padding: const EdgeInsets.only(left: 18, right: 18, top: 10, bottom: 10),
       child: SafeArea(

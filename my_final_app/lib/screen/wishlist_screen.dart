@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/listing.dart';
 import '../services/wishlist_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme_ext.dart';
 import '../widgets/listing/listing_card_real.dart';
 import 'listing_detail_screen.dart';
 
@@ -43,7 +44,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F3F7),
+      backgroundColor: context.appBg,
       appBar: AppBar(
         backgroundColor: AppColors.navy,
         elevation: 0,

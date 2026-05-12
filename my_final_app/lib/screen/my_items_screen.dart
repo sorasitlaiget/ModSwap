@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import '../models/listing.dart';
 import '../services/listings_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme_ext.dart';
 import '../widgets/listing/listing_card_real.dart';
 import 'listing_detail_screen.dart';
 import 'post_item_screen.dart';
 
-/// My Items screen — 3 tabs (Drafts / Published / Sold)
+/// My Items screen — 3 tabs (Drafts / Published / Sold).
+/// Pass [initialTabIndex] to open a specific tab (0=Drafts, 1=Published, 2=Sold).
 class MyItemsScreen extends StatefulWidget {
-  const MyItemsScreen({super.key});
+  final int initialTabIndex;
+
+  const MyItemsScreen({super.key, this.initialTabIndex = 0});
 
   @override
   State<MyItemsScreen> createState() => _MyItemsScreenState();
@@ -29,8 +33,12 @@ class _MyItemsScreenState extends State<MyItemsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _loadTab(0);
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTabIndex.clamp(0, 2),
+    );
+    _loadTab(_tabController.index);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         _loadTab(_tabController.index);
@@ -76,7 +84,7 @@ class _MyItemsScreenState extends State<MyItemsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F3F7),
+      backgroundColor: context.appBg,
       appBar: AppBar(
         backgroundColor: AppColors.navy,
         elevation: 0,

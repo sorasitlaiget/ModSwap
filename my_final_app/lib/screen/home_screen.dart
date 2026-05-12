@@ -5,6 +5,7 @@ import '../models/listing.dart';
 import '../providers/auth_provider.dart';
 import '../services/listings_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme_ext.dart';
 import '../widgets/home/home_header.dart';
 import '../widgets/home/welcome_banner.dart';
 import '../widgets/home/home_search_bar.dart';
@@ -158,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final userName = profile?.displayName ?? 'Friend';
 
     return Container(
-      color: const Color(0xFFF2F3F7),
+      color: context.appBg,
       child: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.orange,
@@ -189,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(14, 20, 14, 12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.cardBg,
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
@@ -218,14 +219,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 15), // 🎯 8. ขยับระยะห่างตรงนี้เพิ่ม (จาก 56 เป็น 70) เพื่อหลบกล่องที่ขยับลงมา
 
-              const Padding(
-                padding: EdgeInsets.fromLTRB(14, 16, 14, 10),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),
                 child: Text(
                   'Campus Pick: New This Week',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.navy,
+                    color: context.primaryText,
                   ),
                 ),
               ),
