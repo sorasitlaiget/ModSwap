@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../models/listing.dart';
 import '../services/listings_service.dart';
+import '../services/storage_service.dart';
 import '../services/wishlist_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/listing/state_badge.dart';
@@ -25,6 +26,7 @@ class ListingDetailScreen extends StatefulWidget {
 class _ListingDetailScreenState extends State<ListingDetailScreen> {
   final _service = ListingsService();
   final _wishlistService = WishlistService();
+  final _storageService = StorageService();
   Listing? _listing;
   bool _loading = true;
   String? _error;
@@ -152,12 +154,34 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   }
 
   Future<void> _markSold() async {
-    final confirmed = await _showMarkSoldSheet(_listing!);
-    if (confirmed == null) return;
+    final formData = await _showMarkSoldSheet(_listing!);
+    if (formData == null) return;
 
     setState(() => _loading = true);
     try {
-      await _service.markSold(_listing!.id);
+      String? swapPhotoUrl;
+      if (formData.swapPhoto != null) {
+        swapPhotoUrl = await _storageService.uploadSwapPhoto(
+          listingId: _listing!.id,
+          file: File(formData.swapPhoto!.path),
+        );
+      }
+
+      final d = formData.dateCompleted;
+      final dateStr =
+          '${d.year.toString().padLeft(4, '0')}-'
+          '${d.month.toString().padLeft(2, '0')}-'
+          '${d.day.toString().padLeft(2, '0')}';
+
+      await _service.markSold(
+        _listing!.id,
+        dealType: formData.dealType,
+        buyerLineId: formData.buyerLineId,
+        dateCompleted: dateStr,
+        finalPrice: formData.finalPrice,
+        whatIGotReturn: formData.whatIGotReturn,
+        swapItemPhotoURL: swapPhotoUrl,
+      );
       if (mounted) {
         _showSuccess('Marked as sold');
         Navigator.pop(context, true);
@@ -168,7 +192,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     }
   }
 
-  Future<String?> _showMarkSoldSheet(Listing listing) {
+  Future<_DealFormData?> _showMarkSoldSheet(Listing listing) {
     var selectedIndex = 0;
     final priceCtrl = TextEditingController(
       text: listing.price != null ? listing.price!.toInt().toString() : '',
@@ -178,7 +202,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     DateTime? completedAt = DateTime.now();
     XFile? swapPhoto;
 
-    return showModalBottomSheet<String>(
+    return showModalBottomSheet<_DealFormData>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -447,7 +471,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                     filled: true,
                                     fillColor: AppColors.softGray,
                                     hintText:
-                                        'Apple Pencil 2nd gen + Magic Keyboard',
+                                        'Item that you got',
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       borderSide: BorderSide.none,
@@ -509,7 +533,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 decoration: InputDecoration(
                                   filled: true,
                                   fillColor: AppColors.softGray,
-                                  hintText: '@username',
+                                  hintText: 'LineId',
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
                                     borderSide: BorderSide.none,
@@ -594,7 +618,23 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 Expanded(
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      Future.microtask(() => Navigator.of(ctx).pop(buyerCtrl.text.trim()));
+                                      final dealTypes = ['cash', 'swap', 'swap_cash'];
+                                      final priceVal = selected != 1
+                                          ? double.tryParse(priceCtrl.text.trim())
+                                          : null;
+                                      final returnVal = selected != 0
+                                          ? (returnCtrl.text.trim().isEmpty ? null : returnCtrl.text.trim())
+                                          : null;
+                                      Future.microtask(() => Navigator.of(ctx).pop(
+                                        _DealFormData(
+                                          dealType: dealTypes[selected],
+                                          buyerLineId: buyerCtrl.text.trim(),
+                                          dateCompleted: completedAt ?? DateTime.now(),
+                                          finalPrice: priceVal,
+                                          whatIGotReturn: returnVal,
+                                          swapPhoto: swapPhoto,
+                                        ),
+                                      ));
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.orange,
@@ -1513,4 +1553,22 @@ class _RatingSheetState extends State<_RatingSheet> {
       ),
     );
   }
+}
+
+class _DealFormData {
+  final String dealType; // 'cash' | 'swap' | 'swap_cash'
+  final String buyerLineId;
+  final DateTime dateCompleted;
+  final double? finalPrice;
+  final String? whatIGotReturn;
+  final XFile? swapPhoto;
+
+  const _DealFormData({
+    required this.dealType,
+    required this.buyerLineId,
+    required this.dateCompleted,
+    this.finalPrice,
+    this.whatIGotReturn,
+    this.swapPhoto,
+  });
 }
