@@ -34,7 +34,9 @@ class RatingService {
     required String listingId,
     required String listingTitle,
   }) async {
-    await _firestore.collection('pendingRatings').add({
+    // Use listingId as document ID — prevents duplicate pending ratings
+    // for the same listing (idempotent upsert).
+    await _firestore.collection('pendingRatings').doc(listingId).set({
       'buyerUid': buyerUid,
       'sellerId': sellerId,
       'sellerName': sellerName,

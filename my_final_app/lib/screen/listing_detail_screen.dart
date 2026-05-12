@@ -202,6 +202,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     final returnCtrl = TextEditingController();
     DateTime? completedAt = DateTime.now();
     XFile? swapPhoto;
+    String? buyerLineIdError;
+    var validatingBuyer = false;
 
     return showModalBottomSheet<_DealFormData>(
       context: context,
@@ -528,18 +530,64 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                               ),
                             ],
                             buildField(
-                              'Buyer',
-                              TextField(
-                                controller: buyerCtrl,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: AppColors.softGray,
-                                  hintText: 'LineId',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide.none,
+                              'Buyer LINE ID',
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  TextField(
+                                    controller: buyerCtrl,
+                                    onChanged: (_) {
+                                      if (buyerLineIdError != null) {
+                                        setState(() => buyerLineIdError = null);
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: buyerLineIdError != null
+                                          ? Colors.red.shade50
+                                          : AppColors.softGray,
+                                      hintText: 'e.g. john_doe',
+                                      prefixIcon: const Icon(
+                                        Icons.chat_bubble_outline,
+                                        color: AppColors.textGray,
+                                        size: 20,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: buyerLineIdError != null
+                                            ? const BorderSide(color: Colors.red)
+                                            : BorderSide.none,
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: buyerLineIdError != null
+                                            ? const BorderSide(color: Colors.red)
+                                            : const BorderSide(color: AppColors.orange),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  if (buyerLineIdError != null) ...[
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.error_outline,
+                                            size: 14, color: Colors.red),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          buyerLineIdError!,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                             buildField(
@@ -618,25 +666,68 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: ElevatedButton(
-                                    onPressed: () {
-                                      final dealTypes = ['cash', 'swap', 'swap_cash'];
-                                      final priceVal = selected != 1
-                                          ? double.tryParse(priceCtrl.text.trim())
-                                          : null;
-                                      final returnVal = selected != 0
-                                          ? (returnCtrl.text.trim().isEmpty ? null : returnCtrl.text.trim())
-                                          : null;
-                                      Future.microtask(() => Navigator.of(ctx).pop(
-                                        _DealFormData(
-                                          dealType: dealTypes[selected],
-                                          buyerLineId: buyerCtrl.text.trim(),
-                                          dateCompleted: completedAt ?? DateTime.now(),
-                                          finalPrice: priceVal,
-                                          whatIGotReturn: returnVal,
-                                          swapPhoto: swapPhoto,
-                                        ),
-                                      ));
-                                    },
+                                    onPressed: validatingBuyer
+                                        ? null
+                                        : () async {
+                                            final lineId = buyerCtrl.text.trim();
+                                            if (lineId.isEmpty) {
+                                              setState(() => buyerLineIdError =
+                                                  'Please enter buyer LINE ID');
+                                              return;
+                                            }
+                                            setState(() {
+                                              validatingBuyer = true;
+                                              buyerLineIdError = null;
+                                            });
+                                            String? buyerUid;
+                                            try {
+                                              buyerUid = await _ratingService
+                                                  .findBuyerUidByLineId(lineId);
+                                            } catch (_) {
+                                              setState(() {
+                                                validatingBuyer = false;
+                                                buyerLineIdError =
+                                                    'Could not verify LINE ID';
+                                              });
+                                              return;
+                                            }
+                                            if (buyerUid == null) {
+                                              setState(() {
+                                                validatingBuyer = false;
+                                                buyerLineIdError =
+                                                    'LINE ID not found in the system';
+                                              });
+                                              return;
+                                            }
+                                            setState(() => validatingBuyer = false);
+                                            final dealTypes = [
+                                              'cash',
+                                              'swap',
+                                              'swap_cash'
+                                            ];
+                                            final priceVal = selected != 1
+                                                ? double.tryParse(
+                                                    priceCtrl.text.trim())
+                                                : null;
+                                            final returnVal = selected != 0
+                                                ? (returnCtrl.text.trim().isEmpty
+                                                    ? null
+                                                    : returnCtrl.text.trim())
+                                                : null;
+                                            Future.microtask(
+                                              () => Navigator.of(ctx).pop(
+                                                _DealFormData(
+                                                  dealType: dealTypes[selected],
+                                                  buyerLineId: lineId,
+                                                  dateCompleted:
+                                                      completedAt ?? DateTime.now(),
+                                                  finalPrice: priceVal,
+                                                  whatIGotReturn: returnVal,
+                                                  swapPhoto: swapPhoto,
+                                                ),
+                                              ),
+                                            );
+                                          },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.orange,
                                       padding: const EdgeInsets.symmetric(
@@ -646,13 +737,22 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                         borderRadius: BorderRadius.circular(24),
                                       ),
                                     ),
-                                    child: const Text(
-                                      'Submit Deal',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                                    child: validatingBuyer
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text(
+                                            'Submit Deal',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ],

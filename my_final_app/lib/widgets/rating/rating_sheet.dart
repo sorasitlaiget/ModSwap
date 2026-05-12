@@ -79,8 +79,13 @@ class _RatingSheetState extends State<RatingSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _skip();
+      },
+      child: Container(
+        padding: EdgeInsets.only(
         top: 20,
         left: 20,
         right: 20,
@@ -226,6 +231,7 @@ class _RatingSheetState extends State<RatingSheet> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
