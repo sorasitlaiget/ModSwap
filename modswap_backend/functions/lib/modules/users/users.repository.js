@@ -54,6 +54,12 @@ class UsersRepository {
             updatedAt: firestore_1.Timestamp.now(),
         });
     }
+    async incrementTotalTrades(uid) {
+        await this.collection.doc(uid).update({
+            totalTrades: firestore_1.FieldValue.increment(1),
+            updatedAt: firestore_1.Timestamp.now(),
+        });
+    }
     async delete(uid) {
         await this.collection.doc(uid).delete();
     }

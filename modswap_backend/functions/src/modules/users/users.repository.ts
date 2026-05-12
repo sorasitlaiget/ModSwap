@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase-admin/firestore';
+import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { firestore } from '../../config/firebase.config';
 import { COLLECTIONS } from '../../config/constants';
 import { User, CreateUserData, UpdateUserProfileData } from './users.types';
@@ -50,6 +50,13 @@ export class UsersRepository {
   async update(uid: string, data: UpdateUserProfileData): Promise<void> {
     await this.collection.doc(uid).update({
       ...data,
+      updatedAt: Timestamp.now(),
+    });
+  }
+
+  async incrementTotalTrades(uid: string): Promise<void> {
+    await this.collection.doc(uid).update({
+      totalTrades: FieldValue.increment(1),
       updatedAt: Timestamp.now(),
     });
   }
