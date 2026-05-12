@@ -15,6 +15,10 @@ import {
   myListingsQuerySchema,
   updateListingSchema,
 } from './listings.validator';
+import { DealsRepository } from '../deals/deals.repository';
+import { DealsService } from '../deals/deals.service';
+import { DealsController } from '../deals/deals.controller';
+import { markAsSoldSchema } from '../deals/deals.validator';
 
 const router = Router();
 
@@ -23,6 +27,10 @@ const usersRepo = new UsersRepository();
 const listingsRepo = new ListingsRepository();
 const listingsService = new ListingsService(listingsRepo, usersRepo);
 const controller = new ListingsController(listingsService);
+
+const dealsRepo = new DealsRepository();
+const dealsService = new DealsService(dealsRepo, listingsRepo, usersRepo);
+const dealsController = new DealsController(dealsService);
 
 /**
  * Listings Routes
@@ -70,7 +78,17 @@ router.patch(
 
 // Convenience endpoints
 router.post('/:id/publish', authMiddleware, controller.publish);
-router.post('/:id/sold', authMiddleware, controller.markSold);
+
+// Mark as sold — creates a deal record and flips listing state to 'sold'
+router.post(
+  '/:id/sold',
+  authMiddleware,
+  validateBody(markAsSoldSchema),
+  dealsController.markAsSold,
+);
+
+// Get the deal record for a sold listing (owner only)
+router.get('/:id/deal', authMiddleware, dealsController.getDeal);
 
 // Generic state change
 router.patch(

@@ -48,6 +48,24 @@ class StorageService {
     return urls;
   }
 
+  /// Upload swap item photo for a deal
+  /// Path: deals/{userId}/{listingId}/swap_photo.jpg
+  Future<String> uploadSwapPhoto({
+    required String listingId,
+    required File file,
+  }) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) throw Exception('Not authenticated');
+
+    final path = 'deals/$userId/$listingId/swap_photo.jpg';
+    final ref = _storage.ref(path);
+    final task = await ref.putFile(
+      file,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+    return await task.ref.getDownloadURL();
+  }
+
   /// Upload user avatar
   Future<String> uploadAvatar(File file) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;

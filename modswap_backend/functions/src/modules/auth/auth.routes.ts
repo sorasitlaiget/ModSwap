@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { UsersRepository } from '../users/users.repository';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { validateBody } from '../../middleware/validation.middleware';
-import { completeProfileSchema, updateProfileSchema } from './auth.validator';
+import { completeProfileSchema, updateProfileSchema, changePasswordSchema } from './auth.validator';
 
 /**
  * Auth Routes
@@ -33,6 +33,13 @@ export function createAuthRouter(): Router {
     authMiddleware,
     validateBody(updateProfileSchema),
     controller.updateProfile
+  );
+
+  router.patch(
+    '/password',
+    authMiddleware,
+    validateBody(changePasswordSchema),
+    controller.changePassword
   );
 
   return router;
