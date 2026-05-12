@@ -35,9 +35,9 @@ service cloud.firestore {
     match /pendingRatings/{ratingId} {
       // Buyer reads/deletes their own pending ratings (for real-time popup)
       allow read, delete: if isAuthenticated() && resource.data.buyerUid == request.auth.uid;
-      // Seller creates pending rating from Flutter after mark as sold
-      allow create: if isAuthenticated();
-      allow update: if false;
+      // Seller creates or re-sets pending rating (idempotent upsert using listingId as doc ID)
+      allow create, update: if isAuthenticated() &&
+        request.resource.data.sellerId == request.auth.uid;
     }
 
     // === Default deny ===

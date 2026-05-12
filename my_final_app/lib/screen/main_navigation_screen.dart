@@ -32,6 +32,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final _ratingService = RatingService();
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _ratingSubscription;
   bool _showingRatingPopup = false;
+  QuerySnapshot<Map<String, dynamic>>? _latestRatingSnapshot;
+  // Listings already shown this session — prevents re-showing if duplicate doc
+  // hasn't been deleted from Firestore yet when the next snapshot fires.
+  final _handledListingIds = <String>{};
 
   @override
   void initState() {
@@ -50,27 +54,56 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (uid == null) return;
 
     _ratingSubscription = _ratingService.pendingRatingsStream(uid).listen((snapshot) {
-      for (final change in snapshot.docChanges) {
-        if (change.type == DocumentChangeType.added && !_showingRatingPopup) {
-          final data = change.doc.data()!;
-          _showingRatingPopup = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              isDismissible: false,
-              backgroundColor: Colors.transparent,
-              builder: (_) => RatingSheet(
-                pendingRatingId: change.doc.id,
-                sellerName: data['sellerName'] as String? ?? '',
-                listingTitle: data['listingTitle'] as String? ?? '',
-              ),
-            ).then((_) => _showingRatingPopup = false);
-          });
-          break;
-        }
+      _latestRatingSnapshot = snapshot;
+      if (!_showingRatingPopup) _maybeShowRating();
+    });
+  }
+
+  void _maybeShowRating() {
+    final snapshot = _latestRatingSnapshot;
+    if (snapshot == null || snapshot.docs.isEmpty || _showingRatingPopup) return;
+
+    // Deduplicate by listingId — keep the first doc per listing,
+    // delete any extras left over from old-format documents.
+    final seenListingIds = <String>{};
+    QueryDocumentSnapshot<Map<String, dynamic>>? docToShow;
+
+    for (final doc in snapshot.docs) {
+      final listingId = (doc.data()['listingId'] as String?) ?? doc.id;
+      if (_handledListingIds.contains(listingId) || seenListingIds.contains(listingId)) {
+        _ratingService.skipRating(doc.id); // silently delete handled or duplicate
+      } else {
+        seenListingIds.add(listingId);
+        docToShow ??= doc;
       }
+    }
+
+    if (docToShow == null) return;
+
+    final listingIdToShow = (docToShow.data()['listingId'] as String?) ?? docToShow.id;
+    _handledListingIds.add(listingIdToShow); // mark before showing — prevents re-show if doc lingers
+    final data = docToShow.data();
+    _showingRatingPopup = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        _showingRatingPopup = false;
+        return;
+      }
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: false,
+        enableDrag: false,
+        backgroundColor: Colors.transparent,
+        builder: (_) => RatingSheet(
+          pendingRatingId: docToShow!.id,
+          sellerName: data['sellerName'] as String? ?? '',
+          listingTitle: data['listingTitle'] as String? ?? '',
+        ),
+      ).then((_) {
+        _showingRatingPopup = false;
+      });
     });
   }
 
