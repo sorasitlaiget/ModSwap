@@ -178,10 +178,27 @@ class ListingsService {
     }
   }
 
-  Future<Listing> markSold(String id) async {
+  Future<void> markSold(
+    String id, {
+    required String dealType,
+    required String buyerLineId,
+    required String dateCompleted,
+    double? finalPrice,
+    String? whatIGotReturn,
+    String? swapItemPhotoURL,
+  }) async {
     try {
-      final res = await _dio.post('/listings/$id/sold');
-      return Listing.fromJson(res.data['data'] as Map<String, dynamic>);
+      await _dio.post(
+        '/listings/$id/sold',
+        data: {
+          'dealType': dealType,
+          'buyerLineId': buyerLineId,
+          'dateCompleted': dateCompleted,
+          if (finalPrice != null) 'finalPrice': finalPrice,
+          if (whatIGotReturn != null) 'whatIGotReturn': whatIGotReturn,
+          if (swapItemPhotoURL != null) 'swapItemPhotoURL': swapItemPhotoURL,
+        },
+      );
     } on DioException catch (e) {
       throw _parseError(e);
     }

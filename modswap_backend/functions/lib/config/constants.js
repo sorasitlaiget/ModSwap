@@ -8,8 +8,10 @@ exports.KMUTT_EMAIL_DOMAIN = '@mail.kmutt.ac.th';
 exports.COLLECTIONS = {
     USERS: 'users',
     LISTINGS: 'listings',
+    DEALS: 'deals',
     TRADES: 'trades',
     REVIEWS: 'reviews',
+    PENDING_RATINGS: 'pendingRatings',
 };
 exports.USER_ROLES = {
     STUDENT: 'student',
