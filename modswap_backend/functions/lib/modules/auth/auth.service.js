@@ -4,6 +4,9 @@ exports.AuthService = void 0;
 const app_error_1 = require("../../core/errors/app-error");
 const logger_util_1 = require("../../utils/logger.util");
 const firebase_config_1 = require("../../config/firebase.config");
+const notification_util_1 = require("../../utils/notification.util");
+const constants_1 = require("../../config/constants");
+const firestore_1 = require("firebase-admin/firestore");
 /**
  * Auth Service - business logic สำหรับ profile management
  *
@@ -86,6 +89,38 @@ class AuthService {
     async changePassword(uid, dto) {
         await firebase_config_1.auth.updateUser(uid, { password: dto.newPassword });
         logger_util_1.logger.info('Password changed', { uid });
+        // Fire-and-forget: notify user
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        (0, notification_util_1.sendNotification)({
+            recipientUid: uid,
+            type: 'passwordChanged',
+            title: 'Password Changed',
+            body: `Your password was changed at ${timeStr}`,
+        }).catch(() => null);
+    }
+    async verifyDevice(uid, deviceId) {
+        const deviceRef = firebase_config_1.db
+            .collection(constants_1.COLLECTIONS.USERS)
+            .doc(uid)
+            .collection(constants_1.SUBCOLLECTIONS.DEVICES)
+            .doc(deviceId);
+        const snap = await deviceRef.get();
+        if (snap.exists)
+            return { isNewDevice: false };
+        // New device — save it and notify user
+        await Promise.all([
+            deviceRef.set({ addedAt: firestore_1.Timestamp.now() }),
+            (0, notification_util_1.sendNotification)({
+                recipientUid: uid,
+                type: 'securityAlert',
+                title: 'New Login Detected',
+                body: 'Login from a new device. If this wasn\'t you, secure your account.',
+                deepLinkTarget: '/security',
+            }),
+        ]);
+        logger_util_1.logger.info('New device registered', { uid, deviceId });
+        return { isNewDevice: true };
     }
     /**
      * เปรียบเทียบ dto กับข้อมูลปัจจุบัน → return เฉพาะ field ที่เปลี่ยน

@@ -69,4 +69,15 @@ export class AuthController {
       next(error);
     }
   };
+
+  verifyDevice = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { uid } = req.user!;
+      const { deviceId } = req.body as { deviceId: string };
+      const result = await this.service.verifyDevice(uid, deviceId);
+      res.json(successResponse(result));
+    } catch (error) {
+      next(error);
+    }
+  };
 }

@@ -1,8 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../config/constants.dart';
+import '../models/notification_model.dart';
 import '../providers/auth_provider.dart';
+import '../services/notification_service.dart';
 import '../theme/app_colors.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
@@ -41,6 +44,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             faculty: _facultyCtrl.text.trim(),
             lineId: _lineIdCtrl.text.trim(),
           );
+      // Fire-and-forget: send welcome notification
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        NotificationService().send(
+          recipientUid: uid,
+          type: NotificationType.welcome,
+          title: 'Welcome to ModSwap!',
+          body: 'Start buying, selling, and swapping with KMUTT',
+        ).catchError((_) {});
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -13,6 +13,12 @@ export const COLLECTIONS = {
   PENDING_RATINGS: 'pendingRatings',
 } as const;
 
+export const SUBCOLLECTIONS = {
+  NOTIFICATIONS: 'notifications',
+  WISHLIST: 'wishlist',
+  DEVICES: 'devices',
+} as const;
+
 export const USER_ROLES = {
   STUDENT: 'student',
   ADMIN: 'admin',

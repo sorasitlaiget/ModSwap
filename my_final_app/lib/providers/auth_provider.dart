@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/user_profile.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
@@ -161,6 +163,8 @@ class AuthState extends ChangeNotifier {
       await _authService.login(email: email, password: password);
       debugPrint(
           '[AuthState] login() succeeded — waiting for authStateChanges to fire');
+      // Fire-and-forget: check if this is a new device
+      _verifyDeviceInBackground();
     } catch (e) {
       _errorMessage = AuthService.parseErrorMessage(e);
       notifyListeners();
@@ -236,14 +240,26 @@ class AuthState extends ChangeNotifier {
     return updated;
   }
 
-  /// Change Firebase Auth password. May throw if recent login is required —
-  /// caller should catch and prompt the user to log in again.
-  Future<void> updatePassword(String newPassword) async {
-    final user = _authService.currentUser;
-    if (user == null) {
-      throw Exception('Not signed in.');
+  /// Change password via backend API (writes passwordChanged notification automatically)
+  Future<void> changePassword(String newPassword) async {
+    await _apiService.changePassword(newPassword);
+  }
+
+  void _verifyDeviceInBackground() {
+    _getOrCreateDeviceId().then((id) => _apiService.verifyDevice(id)).catchError((_) {});
+  }
+
+  Future<String> _getOrCreateDeviceId() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/modswap_device_id.txt');
+      if (await file.exists()) return (await file.readAsString()).trim();
+      final id = 'device_${DateTime.now().millisecondsSinceEpoch}';
+      await file.writeAsString(id);
+      return id;
+    } catch (_) {
+      return 'device_unknown';
     }
-    await user.updatePassword(newPassword);
   }
 
   @override

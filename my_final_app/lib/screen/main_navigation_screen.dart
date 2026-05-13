@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/notification_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/listings_service.dart';
-import '../services/mock_notifications.dart';
 import '../services/rating_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme_ext.dart';
@@ -18,6 +18,7 @@ import 'my_items_screen.dart';
 import 'notification_screen.dart';
 import 'post_item_screen.dart';
 import 'wishlist_screen.dart';
+import 'change_password_screen.dart';
 import 'edit_profile_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -41,6 +42,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     _listenPendingRatings();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null && mounted) {
+        context.read<NotificationProvider>().init(uid);
+      }
+    });
   }
 
   @override
@@ -145,10 +152,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         child: _buildPage(_currentIndex),
       ),
       bottomNavigationBar: ModSwapBottomNav(
-      currentIndex: _currentIndex,
-      notificationCount: MockNotifications.unreadCount(),  // ← เปลี่ยน
-      onTap: _onTap,
-    ),
+        currentIndex: _currentIndex,
+        notificationCount: context.watch<NotificationProvider>().unreadCount,
+        onTap: _onTap,
+      ),
     );
   }
 
@@ -354,21 +361,6 @@ class _MenuPageState extends State<_MenuPage> {
                     child: Column(
                       children: [
                         _MenuRow(
-                          icon: Icons.inventory_2_outlined,
-                          label: 'My Item',
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const MyItemsScreen(initialTabIndex: 1),
-                              ),
-                            );
-                            _loadItemsCount();
-                          },
-                        ),
-                        const _RowDivider(),
-                        _MenuRow(
                           icon: Icons.favorite_border,
                           label: 'Wishlist',
                           onTap: () {
@@ -376,6 +368,19 @@ class _MenuPageState extends State<_MenuPage> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) => const WishlistScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const _RowDivider(),
+                        _MenuRow(
+                          icon: Icons.lock_outline,
+                          label: 'Change Password',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ChangePasswordScreen(),
                               ),
                             );
                           },

@@ -68,6 +68,17 @@ class AuthController {
                 next(error);
             }
         };
+        this.verifyDevice = async (req, res, next) => {
+            try {
+                const { uid } = req.user;
+                const { deviceId } = req.body;
+                const result = await this.service.verifyDevice(uid, deviceId);
+                res.json((0, response_util_1.successResponse)(result));
+            }
+            catch (error) {
+                next(error);
+            }
+        };
     }
 }
 exports.AuthController = AuthController;
