@@ -8,7 +8,10 @@ import {
 } from './dto/auth.dto';
 import { NotFoundError, ConflictError } from '../../core/errors/app-error';
 import { logger } from '../../utils/logger.util';
-import { auth } from '../../config/firebase.config';
+import { auth, db } from '../../config/firebase.config';
+import { sendNotification } from '../../utils/notification.util';
+import { COLLECTIONS, SUBCOLLECTIONS } from '../../config/constants';
+import { Timestamp } from 'firebase-admin/firestore';
 
 /**
  * Auth Service - business logic สำหรับ profile management
@@ -118,6 +121,42 @@ export class AuthService {
   async changePassword(uid: string, dto: ChangePasswordDto): Promise<void> {
     await auth.updateUser(uid, { password: dto.newPassword });
     logger.info('Password changed', { uid });
+
+    // Fire-and-forget: notify user
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    sendNotification({
+      recipientUid: uid,
+      type: 'passwordChanged',
+      title: 'Password Changed',
+      body: `Your password was changed at ${timeStr}`,
+    }).catch(() => null);
+  }
+
+  async verifyDevice(uid: string, deviceId: string): Promise<{ isNewDevice: boolean }> {
+    const deviceRef = db
+      .collection(COLLECTIONS.USERS)
+      .doc(uid)
+      .collection(SUBCOLLECTIONS.DEVICES)
+      .doc(deviceId);
+
+    const snap = await deviceRef.get();
+    if (snap.exists) return { isNewDevice: false };
+
+    // New device — save it and notify user
+    await Promise.all([
+      deviceRef.set({ addedAt: Timestamp.now() }),
+      sendNotification({
+        recipientUid: uid,
+        type: 'securityAlert',
+        title: 'New Login Detected',
+        body: 'Login from a new device. If this wasn\'t you, secure your account.',
+        deepLinkTarget: '/security',
+      }),
+    ]);
+
+    logger.info('New device registered', { uid, deviceId });
+    return { isNewDevice: true };
   }
 
   /**

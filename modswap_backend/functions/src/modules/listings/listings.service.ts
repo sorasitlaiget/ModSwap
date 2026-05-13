@@ -7,6 +7,9 @@ import {
   BadRequestError,
 } from '../../core/errors/app-error';
 import { logger } from '../../utils/logger.util';
+import { sendNotification } from '../../utils/notification.util';
+import { db } from '../../config/firebase.config';
+import { SUBCOLLECTIONS } from '../../config/constants';
 import { publishListingSchema } from './listings.validator';
 import {
   CreateDraftDto,
@@ -105,8 +108,45 @@ export class ListingsService {
     await this.listingsRepo.update(listingId, updates);
     logger.info('Listing updated', { uid, listingId });
 
+    // Fire-and-forget: notify wishlist users if price dropped
+    if (
+      dto.price != null &&
+      listing.price != null &&
+      dto.price < listing.price
+    ) {
+      this.notifyPriceDrop(listingId, listing.title, listing.price, dto.price).catch(() => null);
+    }
+
     const updated = await this.listingsRepo.findById(listingId);
     return this.toDto(updated!);
+  }
+
+  private async notifyPriceDrop(
+    listingId: string,
+    title: string,
+    oldPrice: number,
+    newPrice: number,
+  ): Promise<void> {
+    const snap = await db
+      .collectionGroup(SUBCOLLECTIONS.WISHLIST)
+      .where('listingId', '==', listingId)
+      .get();
+
+    const notifications = snap.docs.map((doc) => {
+      const uid = doc.ref.parent.parent?.id;
+      if (!uid) return Promise.resolve();
+      return sendNotification({
+        recipientUid: uid,
+        type: 'priceDrop',
+        title: 'Price Drop on Wishlist',
+        body: `"${title}" is now ฿${newPrice.toLocaleString()} (was ฿${oldPrice.toLocaleString()})`,
+        deepLinkTarget: `/item/${listingId}`,
+        data: { listingId, oldPrice, newPrice },
+      });
+    });
+
+    await Promise.all(notifications);
+    logger.info('Price drop notifications sent', { listingId, count: snap.size });
   }
 
   /**

@@ -49,3 +49,7 @@ export const changePasswordSchema = z.object({
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
 });
+
+export const verifyDeviceSchema = z.object({
+  deviceId: z.string().min(1, 'Device ID is required').max(200),
+});

@@ -4,6 +4,9 @@ exports.ListingsService = void 0;
 const firestore_1 = require("firebase-admin/firestore");
 const app_error_1 = require("../../core/errors/app-error");
 const logger_util_1 = require("../../utils/logger.util");
+const notification_util_1 = require("../../utils/notification.util");
+const firebase_config_1 = require("../../config/firebase.config");
+const constants_1 = require("../../config/constants");
 const listings_validator_1 = require("./listings.validator");
 /**
  * Listings Service - business logic for listings
@@ -81,8 +84,58 @@ class ListingsService {
         }
         await this.listingsRepo.update(listingId, updates);
         logger_util_1.logger.info('Listing updated', { uid, listingId });
+        // Fire-and-forget: notify wishlist users if price dropped
+        if (dto.price != null &&
+            listing.price != null &&
+            dto.price < listing.price) {
+            this.notifyPriceDrop(listingId, listing.title, listing.price, dto.price).catch(() => null);
+        }
         const updated = await this.listingsRepo.findById(listingId);
         return this.toDto(updated);
+    }
+    async notifyPriceDrop(listingId, title, oldPrice, newPrice) {
+        const snap = await firebase_config_1.db
+            .collectionGroup(constants_1.SUBCOLLECTIONS.WISHLIST)
+            .where('listingId', '==', listingId)
+            .get();
+        const notifications = snap.docs.map((doc) => {
+            const uid = doc.ref.parent.parent?.id;
+            if (!uid)
+                return Promise.resolve();
+            return (0, notification_util_1.sendNotification)({
+                recipientUid: uid,
+                type: 'priceDrop',
+                title: 'Price Drop on Wishlist',
+                body: `"${title}" is now ฿${newPrice.toLocaleString()} (was ฿${oldPrice.toLocaleString()})`,
+                deepLinkTarget: `/item/${listingId}`,
+                data: { listingId, oldPrice, newPrice },
+            });
+        });
+        await Promise.all(notifications);
+        logger_util_1.logger.info('Price drop notifications sent', { listingId, count: snap.size });
+    }
+    async notifyFollowers(sellerUid, listingId, title) {
+        const snap = await firebase_config_1.db
+            .collection(constants_1.COLLECTIONS.USERS)
+            .doc(sellerUid)
+            .collection(constants_1.SUBCOLLECTIONS.FOLLOWERS)
+            .get();
+        const seller = await this.usersRepo.findById(sellerUid);
+        const sellerName = seller?.displayName ?? 'A seller';
+        const notifications = snap.docs.map((doc) => (0, notification_util_1.sendNotification)({
+            recipientUid: doc.id,
+            type: 'newItemFromSeller',
+            title: `New Item from @${sellerName}`,
+            body: `${sellerName} just posted "${title}"`,
+            deepLinkTarget: `/item/${listingId}`,
+            data: { listingId, sellerUid },
+        }));
+        await Promise.all(notifications);
+        logger_util_1.logger.info('New item notifications sent to followers', {
+            sellerUid,
+            listingId,
+            count: snap.size,
+        });
     }
     /**
      * Publish a draft → published (validates full schema)
@@ -158,6 +211,10 @@ class ListingsService {
             from: listing.state,
             to: newState,
         });
+        // Fire-and-forget: notify followers when a listing is first published
+        if (newState === 'published' && listing.state !== 'published') {
+            this.notifyFollowers(uid, listingId, listing.title).catch(() => null);
+        }
         const updated = await this.listingsRepo.findById(listingId);
         return this.toDto(updated);
     }

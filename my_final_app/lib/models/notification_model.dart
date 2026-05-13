@@ -19,7 +19,6 @@ enum NotificationType {
   // For You (recommendations)
   priceDrop,
   trending,
-  newItemFromSeller,
 
   // System
   welcome,
@@ -38,7 +37,6 @@ extension NotificationTypeProps on NotificationType {
         return NotificationCategory.buyer;
       case NotificationType.priceDrop:
       case NotificationType.trending:
-      case NotificationType.newItemFromSeller:
         return NotificationCategory.forYou;
       case NotificationType.welcome:
       case NotificationType.emailVerified:
@@ -62,8 +60,6 @@ extension NotificationTypeProps on NotificationType {
         return Icons.trending_down;
       case NotificationType.trending:
         return Icons.local_fire_department;
-      case NotificationType.newItemFromSeller:
-        return Icons.new_releases_outlined;
       case NotificationType.welcome:
         return Icons.celebration;
       case NotificationType.emailVerified:
@@ -90,7 +86,6 @@ extension NotificationTypeProps on NotificationType {
       case NotificationType.priceDrop:
       case NotificationType.emailVerified:
         return const Color(0xFF10B981);
-      case NotificationType.newItemFromSeller:
       case NotificationType.passwordChanged:
         return const Color(0xFF3B82F6);
       case NotificationType.securityAlert:
@@ -130,6 +125,44 @@ class AppNotification {
       isRead: isRead ?? this.isRead,
       deepLinkTarget: deepLinkTarget,
       data: data,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'type': type.name,
+      'title': title,
+      'body': body,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+      'isRead': isRead,
+      if (deepLinkTarget != null) 'deepLinkTarget': deepLinkTarget,
+      if (data != null) 'data': data,
+    };
+  }
+
+  factory AppNotification.fromMap(String id, Map<String, dynamic> map) {
+    final typeStr = map['type'] as String? ?? '';
+    final type = NotificationType.values.firstWhere(
+      (e) => e.name == typeStr,
+      orElse: () => NotificationType.welcome,
+    );
+    final createdAtRaw = map['createdAt'];
+    DateTime createdAt;
+    if (createdAtRaw is int) {
+      createdAt = DateTime.fromMillisecondsSinceEpoch(createdAtRaw);
+    } else {
+      // Firestore Timestamp
+      createdAt = (createdAtRaw as dynamic).toDate() as DateTime;
+    }
+    return AppNotification(
+      id: id,
+      type: type,
+      title: map['title'] as String? ?? '',
+      body: map['body'] as String? ?? '',
+      createdAt: createdAt,
+      isRead: map['isRead'] as bool? ?? false,
+      deepLinkTarget: map['deepLinkTarget'] as String?,
+      data: map['data'] as Map<String, dynamic>?,
     );
   }
 

@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../models/listing.dart';
+import '../models/notification_model.dart';
 import '../services/listings_service.dart';
+import '../services/notification_service.dart';
 import '../services/rating_service.dart';
 import '../services/storage_service.dart';
 import '../services/wishlist_service.dart';
@@ -67,6 +69,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         _isInWishlist = newState;
         _wishlistLoading = false;
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -167,6 +170,18 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
 
       // Fire-and-forget: notify buyer via Firestore pending rating
       _createPendingRatingForBuyer(formData.buyerLineId);
+
+      // Fire-and-forget: notify seller (self) that deal is recorded
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        NotificationService().send(
+          recipientUid: uid,
+          type: NotificationType.markSoldReminder,
+          title: 'Deal Complete!',
+          body: '"${_listing!.title}" has been marked as sold.',
+          deepLinkTarget: '/my-items/${_listing!.id}',
+        ).catchError((_) {});
+      }
 
       if (mounted) {
         _showSuccess('Marked as sold');

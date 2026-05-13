@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/notification_model.dart';
+import 'notification_service.dart';
 
 class RatingService {
+  final _notifService = NotificationService();
   final _firestore = FirebaseFirestore.instance;
 
   // ─── Real-time listener ─────────────────────────────────────────────────
@@ -53,13 +56,20 @@ class RatingService {
   }) async {
     final pendingRef = _firestore.collection('pendingRatings').doc(pendingRatingId);
 
+    // Read outside transaction to capture recipient info for notification
+    final pendingSnap = await pendingRef.get();
+    if (!pendingSnap.exists) return;
+    final pendingData = pendingSnap.data()!;
+    final sellerId = pendingData['sellerId'] as String? ?? '';
+    final listingTitle = pendingData['listingTitle'] as String? ?? '';
+
     await _firestore.runTransaction((tx) async {
       final pendingDoc = await tx.get(pendingRef);
       if (!pendingDoc.exists) return;
 
       final data = pendingDoc.data()!;
-      final sellerId = data['sellerId'] as String;
-      final sellerRef = _firestore.collection('users').doc(sellerId);
+      final sid = data['sellerId'] as String;
+      final sellerRef = _firestore.collection('users').doc(sid);
       final sellerDoc = await tx.get(sellerRef);
 
       if (!sellerDoc.exists) {
@@ -81,6 +91,17 @@ class RatingService {
       });
       tx.delete(pendingRef);
     });
+
+    // Fire-and-forget: notify seller they received a rating
+    if (sellerId.isNotEmpty) {
+      _notifService.send(
+        recipientUid: sellerId,
+        type: NotificationType.ratingReceived,
+        title: 'New Rating Received',
+        body: 'You received $rating star${rating != 1 ? 's' : ''} for "$listingTitle"',
+        data: {'stars': rating, 'listingTitle': listingTitle},
+      ).catchError((_) {});
+    }
   }
 
   /// Skip — just deletes the pending rating without submitting a score

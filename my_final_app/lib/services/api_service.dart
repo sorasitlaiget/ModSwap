@@ -65,6 +65,30 @@ class ApiService {
     }
   }
 
+  /// PATCH /auth/password - Change password via backend (admin SDK, no re-auth needed)
+  Future<void> changePassword(String newPassword) async {
+    try {
+      await _client.patch<Map<String, dynamic>>(
+        '/auth/password',
+        body: {'newPassword': newPassword},
+      );
+    } on DioException catch (e) {
+      throw _toUserMessage(e);
+    }
+  }
+
+  /// POST /auth/verify-device - Check if device is new, triggers security alert if so
+  Future<void> verifyDevice(String deviceId) async {
+    try {
+      await _client.post<Map<String, dynamic>>(
+        '/auth/verify-device',
+        body: {'deviceId': deviceId},
+      );
+    } on DioException catch (e) {
+      throw _toUserMessage(e);
+    }
+  }
+
   Exception _toUserMessage(DioException e) {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout) {

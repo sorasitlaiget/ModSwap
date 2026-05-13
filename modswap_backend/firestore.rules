@@ -40,6 +40,22 @@ service cloud.firestore {
         request.resource.data.sellerId == request.auth.uid;
     }
 
+    // === Notifications Subcollection ===
+    match /users/{userId}/notifications/{notifId} {
+      allow read: if isOwner(userId);
+      // Any KMUTT user can create (buyer notifies seller, system notifies user)
+      allow create: if isKmuttEmail();
+      // Owner marks as read only
+      allow update: if isOwner(userId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if isOwner(userId);
+    }
+
+    // === Devices Subcollection ===
+    match /users/{userId}/devices/{deviceId} {
+      allow read, write: if isOwner(userId);
+    }
+
     // === Default deny ===
     match /{document=**} {
       allow read, write: if false;
