@@ -114,29 +114,6 @@ class ListingsService {
         await Promise.all(notifications);
         logger_util_1.logger.info('Price drop notifications sent', { listingId, count: snap.size });
     }
-    async notifyFollowers(sellerUid, listingId, title) {
-        const snap = await firebase_config_1.db
-            .collection(constants_1.COLLECTIONS.USERS)
-            .doc(sellerUid)
-            .collection(constants_1.SUBCOLLECTIONS.FOLLOWERS)
-            .get();
-        const seller = await this.usersRepo.findById(sellerUid);
-        const sellerName = seller?.displayName ?? 'A seller';
-        const notifications = snap.docs.map((doc) => (0, notification_util_1.sendNotification)({
-            recipientUid: doc.id,
-            type: 'newItemFromSeller',
-            title: `New Item from @${sellerName}`,
-            body: `${sellerName} just posted "${title}"`,
-            deepLinkTarget: `/item/${listingId}`,
-            data: { listingId, sellerUid },
-        }));
-        await Promise.all(notifications);
-        logger_util_1.logger.info('New item notifications sent to followers', {
-            sellerUid,
-            listingId,
-            count: snap.size,
-        });
-    }
     /**
      * Publish a draft → published (validates full schema)
      */
@@ -211,10 +188,6 @@ class ListingsService {
             from: listing.state,
             to: newState,
         });
-        // Fire-and-forget: notify followers when a listing is first published
-        if (newState === 'published' && listing.state !== 'published') {
-            this.notifyFollowers(uid, listingId, listing.title).catch(() => null);
-        }
         const updated = await this.listingsRepo.findById(listingId);
         return this.toDto(updated);
     }

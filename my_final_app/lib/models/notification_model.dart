@@ -55,7 +55,7 @@ extension NotificationTypeProps on NotificationType {
       case NotificationType.rateRequest:
         return Icons.star_border;
       case NotificationType.markSoldReminder:
-        return Icons.access_time;
+        return Icons.check_circle_outline;
       case NotificationType.priceDrop:
         return Icons.trending_down;
       case NotificationType.trending:
@@ -82,7 +82,7 @@ extension NotificationTypeProps on NotificationType {
       case NotificationType.welcome:
         return const Color(0xFFFA4616);
       case NotificationType.markSoldReminder:
-        return const Color(0xFFF59E0B);
+        return const Color(0xFF10B981);
       case NotificationType.priceDrop:
       case NotificationType.emailVerified:
         return const Color(0xFF10B981);

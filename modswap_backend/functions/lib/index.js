@@ -15,7 +15,6 @@ const listings_routes_1 = __importDefault(require("./modules/listings/listings.r
 const error_handler_middleware_1 = require("./middleware/error-handler.middleware");
 const wishlist_routes_1 = __importDefault(require("./modules/wishlist/wishlist.routes"));
 const ratings_routes_1 = require("./modules/ratings/ratings.routes");
-const follows_routes_1 = require("./modules/follows/follows.routes");
 // Re-export triggers
 var on_user_create_trigger_1 = require("./triggers/auth/on-user-create.trigger");
 Object.defineProperty(exports, "onUserCreate", { enumerable: true, get: function () { return on_user_create_trigger_1.onUserCreate; } });
@@ -35,7 +34,6 @@ app.use('/auth', (0, auth_routes_1.createAuthRouter)());
 app.use('/listings', listings_routes_1.default);
 app.use('/wishlist', wishlist_routes_1.default);
 app.use('/ratings', (0, ratings_routes_1.createRatingsRouter)());
-app.use('/users/:sellerId/follow', (0, follows_routes_1.createFollowsRouter)());
 // Error handler (must be last)
 app.use(error_handler_middleware_1.errorHandlerMiddleware);
 // Export the API

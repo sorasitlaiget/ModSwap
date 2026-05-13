@@ -121,16 +121,6 @@ export class AuthService {
   async changePassword(uid: string, dto: ChangePasswordDto): Promise<void> {
     await auth.updateUser(uid, { password: dto.newPassword });
     logger.info('Password changed', { uid });
-
-    // Fire-and-forget: notify user
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-    sendNotification({
-      recipientUid: uid,
-      type: 'passwordChanged',
-      title: 'Password Changed',
-      body: `Your password was changed at ${timeStr}`,
-    }).catch(() => null);
   }
 
   async verifyDevice(uid: string, deviceId: string): Promise<{ isNewDevice: boolean }> {
