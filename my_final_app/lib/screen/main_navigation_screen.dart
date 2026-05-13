@@ -336,7 +336,7 @@ class _MenuPageState extends State<_MenuPage> {
                       Expanded(
                         child: _StatCard(
                           value: '${profile.totalTrades}',
-                          label: 'Swaps',
+                          label: 'Deals',
                         ),
                       ),
                     ],

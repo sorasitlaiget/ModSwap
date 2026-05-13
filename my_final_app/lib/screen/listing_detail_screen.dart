@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -38,6 +39,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   int _currentImageIndex = 0;
   bool _isInWishlist = false;
   bool _wishlistLoading = false;
+  double? _sellerRating;
+  int? _sellerTotalReviews;
 
   @override
   void initState() {
@@ -99,6 +102,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         _listing = l;
         _loading = false;
       });
+      _loadSellerRating(l.ownerId);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -106,6 +110,20 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         _loading = false;
       });
     }
+  }
+
+  Future<void> _loadSellerRating(String ownerId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(ownerId)
+          .get();
+      if (!mounted || !doc.exists) return;
+      setState(() {
+        _sellerRating = (doc.data()?['rating'] as num?)?.toDouble();
+        _sellerTotalReviews = doc.data()?['totalReviews'] as int?;
+      });
+    } catch (_) {}
   }
 
   bool get _isOwner {
@@ -205,6 +223,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         listingId: _listing!.id,
         listingTitle: _listing!.title,
       );
+      NotificationService().send(
+        recipientUid: buyerUid,
+        type: NotificationType.markSoldReminder,
+        title: 'Deal Complete!',
+        body: '"${_listing!.title}" has been sold.',
+        deepLinkTarget: '/item/${_listing!.id}',
+      ).catchError((_) {});
     }).catchError((_) {});
   }
 
@@ -252,7 +277,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               );
             }
 
-            Future<void> _pickPhoto() async {
+            Future<void> pickPhoto() async {
               final imagePicker = ImagePicker();
               try {
                 final pickedFile = await imagePicker.pickImage(
@@ -307,7 +332,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 width: 48,
                                 height: 4,
                                 decoration: BoxDecoration(
-                                  color: AppColors.textGray.withOpacity(0.3),
+                                  color: AppColors.textGray.withValues(alpha: 0.3),
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
@@ -351,10 +376,10 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                           ? CachedNetworkImage(
                                               imageUrl: listing.images.first,
                                               fit: BoxFit.cover,
-                                              errorWidget: (_, __, ___) =>
+                                              errorWidget: (_, _, _) =>
                                                   Container(
                                                     color: AppColors.textGray
-                                                        .withOpacity(0.2),
+                                                        .withValues(alpha: 0.2),
                                                     child: const Icon(
                                                       Icons.broken_image,
                                                     ),
@@ -362,7 +387,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                             )
                                           : Container(
                                               color: AppColors.textGray
-                                                  .withOpacity(0.2),
+                                                  .withValues(alpha: 0.2),
                                               child: const Icon(
                                                 Icons.image_outlined,
                                               ),
@@ -500,16 +525,14 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                               buildField(
                                 'Photo of the Swap Item',
                                 GestureDetector(
-                                  onTap: _pickPhoto,
+                                  onTap: pickPhoto,
                                   child: Container(
                                     height: 110,
                                     decoration: BoxDecoration(
                                       color: AppColors.softGray,
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: AppColors.textGray.withOpacity(
-                                          0.3,
-                                        ),
+                                        color: AppColors.textGray.withValues(alpha: 0.3),
                                       ),
                                     ),
                                     child: swapPhoto != null
@@ -799,11 +822,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? AppColors.orange.withOpacity(0.12) : Colors.white,
+          color: selected ? AppColors.orange.withValues(alpha: 0.12) : Colors.white,
           border: Border.all(
             color: selected
                 ? AppColors.orange
-                : AppColors.textGray.withOpacity(0.25),
+                : AppColors.textGray.withValues(alpha: 0.25),
           ),
           borderRadius: BorderRadius.circular(18),
         ),
@@ -1124,7 +1147,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             imageUrl: l.images[i],
             fit: BoxFit.cover,
             placeholder: (_, __) => Container(color: AppColors.softGray),
-            errorWidget: (_, __, ___) => Container(
+            errorWidget: (_, _, _) => Container(
               color: AppColors.softGray,
               child: const Icon(Icons.broken_image),
             ),
@@ -1199,6 +1222,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     color: AppColors.navy,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   'Student ID: ${l.ownerStudentId}',
                   style: const TextStyle(
@@ -1206,6 +1230,34 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     color: AppColors.textGray,
                   ),
                 ),
+                const SizedBox(height: 4),
+                if (_sellerRating != null && (_sellerTotalReviews ?? 0) > 0)
+                  Row(
+                    children: [
+                      const Icon(Icons.star_rounded, size: 15, color: Color(0xFFFFA000)),
+                      const SizedBox(width: 3),
+                      Text(
+                        _sellerRating!.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.navy,
+                        ),
+                      ),
+                      Text(
+                        '  (${_sellerTotalReviews!} review${_sellerTotalReviews! != 1 ? 's' : ''})',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textGray,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  const Text(
+                    'No reviews yet',
+                    style: TextStyle(fontSize: 12, color: AppColors.textGray),
+                  ),
               ],
             ),
           ),
@@ -1224,7 +1276,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       decoration: BoxDecoration(
         color: AppColors.softGray,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.textGray.withOpacity(0.2)),
+        border: Border.all(color: AppColors.textGray.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1287,7 +1339,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             border: Border(
-              top: BorderSide(color: AppColors.textGray.withOpacity(0.2)),
+              top: BorderSide(color: AppColors.textGray.withValues(alpha: 0.2)),
             ),
           ),
           child: Row(
@@ -1349,7 +1401,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border(
-            top: BorderSide(color: AppColors.textGray.withOpacity(0.2)),
+            top: BorderSide(color: AppColors.textGray.withValues(alpha: 0.2)),
           ),
         ),
         child: Row(
@@ -1362,7 +1414,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 border: Border.all(
                   color: _isInWishlist
                       ? AppColors.orange
-                      : AppColors.textGray.withOpacity(0.4),
+                      : AppColors.textGray.withValues(alpha: 0.4),
                   width: 2,
                 ),
               ),

@@ -4,9 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/user_profile.dart';
+import '../models/notification_model.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../services/dio_client.dart';
+import '../services/notification_service.dart';
 
 enum AuthStatus {
   initializing,
@@ -240,9 +242,17 @@ class AuthState extends ChangeNotifier {
     return updated;
   }
 
-  /// Change password via backend API (writes passwordChanged notification automatically)
   Future<void> changePassword(String newPassword) async {
     await _apiService.changePassword(newPassword);
+    final uid = _firebaseUser?.uid;
+    if (uid != null) {
+      NotificationService().send(
+        recipientUid: uid,
+        type: NotificationType.passwordChanged,
+        title: 'Password Changed',
+        body: 'Your password was changed successfully.',
+      ).catchError((_) {});
+    }
   }
 
   void _verifyDeviceInBackground() {

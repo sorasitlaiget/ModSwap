@@ -89,15 +89,6 @@ class AuthService {
     async changePassword(uid, dto) {
         await firebase_config_1.auth.updateUser(uid, { password: dto.newPassword });
         logger_util_1.logger.info('Password changed', { uid });
-        // Fire-and-forget: notify user
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-        (0, notification_util_1.sendNotification)({
-            recipientUid: uid,
-            type: 'passwordChanged',
-            title: 'Password Changed',
-            body: `Your password was changed at ${timeStr}`,
-        }).catch(() => null);
     }
     async verifyDevice(uid, deviceId) {
         const deviceRef = firebase_config_1.db

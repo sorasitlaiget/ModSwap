@@ -16,8 +16,6 @@ exports.COLLECTIONS = {
 exports.SUBCOLLECTIONS = {
     NOTIFICATIONS: 'notifications',
     WISHLIST: 'wishlist',
-    FOLLOWING: 'following',
-    FOLLOWERS: 'followers',
     DEVICES: 'devices',
 };
 exports.USER_ROLES = {
