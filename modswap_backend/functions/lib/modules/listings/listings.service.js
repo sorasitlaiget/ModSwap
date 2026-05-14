@@ -1,6 +1,40 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ListingsService = void 0;
+const crypto = __importStar(require("crypto"));
 const firestore_1 = require("firebase-admin/firestore");
 const app_error_1 = require("../../core/errors/app-error");
 const logger_util_1 = require("../../utils/logger.util");
@@ -8,6 +42,7 @@ const notification_util_1 = require("../../utils/notification.util");
 const firebase_config_1 = require("../../config/firebase.config");
 const constants_1 = require("../../config/constants");
 const listings_validator_1 = require("./listings.validator");
+const embedding_util_1 = require("../../utils/embedding.util");
 /**
  * Listings Service - business logic for listings
  */
@@ -45,6 +80,9 @@ class ListingsService {
             state: 'draft',
             views: 0,
             publishedAt: null,
+            // Embedding generated only on publish (saves API calls on drafts)
+            embedding: null,
+            embeddingHash: null,
         });
         logger_util_1.logger.info('Draft listing created', { uid, listingId: listing.id });
         return this.toDto(listing);
@@ -83,6 +121,17 @@ class ListingsService {
             updates.thumbnailURL = dto.images.length > 0 ? dto.images[0] : null;
         }
         await this.listingsRepo.update(listingId, updates);
+        // ⭐ Re-embed if embedding-relevant fields changed AND listing is published
+        const embeddingFieldsChanged = dto.title !== undefined ||
+            dto.description !== undefined ||
+            dto.category !== undefined ||
+            dto.condition !== undefined;
+        if (embeddingFieldsChanged && listing.state === 'published') {
+            const fresh = await this.listingsRepo.findById(listingId);
+            if (fresh) {
+                this.refreshEmbedding(fresh).catch((err) => logger_util_1.logger.error('Embedding refresh failed', { err, listingId }));
+            }
+        }
         logger_util_1.logger.info('Listing updated', { uid, listingId });
         // Fire-and-forget: notify wishlist users if price dropped
         if (dto.price != null &&
@@ -182,6 +231,10 @@ class ListingsService {
             updates.publishedAt = firestore_1.Timestamp.now();
         }
         await this.listingsRepo.update(listingId, updates);
+        // ⭐ Generate embedding when transitioning to published
+        if (newState === 'published') {
+            this.refreshEmbedding(listing).catch((err) => logger_util_1.logger.error('Embedding generation failed', { err, listingId }));
+        }
         logger_util_1.logger.info('Listing state changed', {
             uid,
             listingId,
@@ -190,6 +243,93 @@ class ListingsService {
         });
         const updated = await this.listingsRepo.findById(listingId);
         return this.toDto(updated);
+    }
+    // ============================================================
+    // ⭐ Semantic Search
+    // ============================================================
+    /**
+     * Smart search using Gemini embeddings + cosine similarity.
+     * "flower" → finds "rose", "ดอกไม้", "bouquet", etc.
+     */
+    async search(params) {
+        const query = params.query.trim();
+        if (!query)
+            return [];
+        const limit = params.limit ?? 20;
+        const minScore = params.minScore ?? 0.62;
+        // 1. Embed the query
+        const queryEmbedding = await (0, embedding_util_1.embedQuery)(query);
+        if (!queryEmbedding) {
+            logger_util_1.logger.warn('Query embedding failed — falling back to keyword search');
+            const fallback = await this.findPublished({
+                search: query,
+                category: params.category,
+                type: params.type,
+                limit,
+            });
+            return fallback.map((l) => ({ ...l, score: 0 }));
+        }
+        // 2. Fetch candidate published listings
+        const candidates = await this.listingsRepo.findPublished({
+            category: params.category,
+            type: params.type,
+            limit: 500,
+        });
+        if (candidates.length === 0)
+            return [];
+        // 3. Rank by cosine similarity
+        const scored = candidates
+            .filter((l) => l.embedding && l.embedding.length > 0)
+            .map((listing) => ({
+            listing,
+            score: (0, embedding_util_1.cosineSimilarity)(queryEmbedding, listing.embedding),
+        }))
+            .filter((s) => s.score >= minScore)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, limit);
+        logger_util_1.logger.info('Semantic search', {
+            query,
+            candidates: candidates.length,
+            results: scored.length,
+            topScore: scored[0]?.score ?? 0,
+        });
+        return scored.map(({ listing, score }) => ({
+            ...this.toDto(listing),
+            score,
+        }));
+    }
+    /**
+     * Regenerate embedding for a listing.
+     * Skips API call if content hash hasn't changed.
+     */
+    async refreshEmbedding(listing) {
+        const text = (0, embedding_util_1.buildEmbedText)({
+            title: listing.title,
+            description: listing.description,
+            category: listing.category,
+            condition: listing.condition,
+        });
+        if (!text) {
+            logger_util_1.logger.warn('No text to embed', { listingId: listing.id });
+            return;
+        }
+        const hash = crypto.createHash('sha256').update(text).digest('hex');
+        if (listing.embeddingHash === hash && listing.embedding?.length) {
+            return;
+        }
+        const embedding = await (0, embedding_util_1.embedDocument)(text);
+        if (!embedding) {
+            logger_util_1.logger.error('Failed to generate embedding', { listingId: listing.id });
+            return;
+        }
+        await this.listingsRepo.update(listing.id, {
+            embedding,
+            embeddingHash: hash,
+        });
+        logger_util_1.logger.info('Embedding refreshed', {
+            listingId: listing.id,
+            dims: embedding.length,
+        });
     }
     async delete(uid, listingId) {
         const listing = await this.listingsRepo.findById(listingId);

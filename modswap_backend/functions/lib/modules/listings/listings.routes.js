@@ -36,6 +36,8 @@ const dealsController = new deals_controller_1.DealsController(dealsService);
  */
 router.get('/', auth_middleware_1.authMiddleware, (0, validation_middleware_1.validateQuery)(listings_validator_1.listingsQuerySchema), controller.list);
 router.get('/my', auth_middleware_1.authMiddleware, (0, validation_middleware_1.validateQuery)(listings_validator_1.myListingsQuerySchema), controller.myListings);
+// ⭐ Smart semantic search (must come before /:id)
+router.post('/search', auth_middleware_1.authMiddleware, controller.search);
 router.get('/:id', auth_middleware_1.authMiddleware, controller.getById);
 router.post('/', auth_middleware_1.authMiddleware, (0, validation_middleware_1.validateBody)(listings_validator_1.createDraftSchema), controller.create);
 router.patch('/:id', auth_middleware_1.authMiddleware, (0, validation_middleware_1.validateBody)(listings_validator_1.updateListingSchema), controller.update);

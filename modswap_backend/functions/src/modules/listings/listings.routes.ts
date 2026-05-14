@@ -60,6 +60,9 @@ router.get(
   controller.myListings,
 );
 
+// ⭐ Smart semantic search (must come before /:id)
+router.post('/search', authMiddleware, controller.search);
+
 router.get('/:id', authMiddleware, controller.getById);
 
 router.post(
