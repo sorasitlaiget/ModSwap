@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
@@ -23,6 +24,10 @@ class AuthState extends ChangeNotifier {
   final ApiService _apiService;
 
   StreamSubscription<User?>? _authSubscription;
+
+  /// ⭐ Realtime listener on users/{uid} document.
+  /// Keeps profile in sync when backend updates rating/totalTrades/etc.
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _profileSubscription;
 
   AuthStatus _status = AuthStatus.initializing;
   User? _firebaseUser;
@@ -64,6 +69,8 @@ class AuthState extends ChangeNotifier {
       debugPrint('[AuthState] Auth state changed: user=${user?.email}');
 
       if (user == null) {
+        await _profileSubscription?.cancel();
+        _profileSubscription = null;
         _firebaseUser = null;
         _profile = null;
         _setStatus(AuthStatus.unauthenticated);
@@ -116,11 +123,48 @@ class AuthState extends ChangeNotifier {
       } else {
         _setStatus(AuthStatus.profileIncomplete);
       }
+
+      // ⭐ Start realtime listener on users/{uid} so rating, totalReviews,
+      // totalTrades stay in sync when backend updates them.
+      _subscribeToProfileChanges();
     } catch (e) {
       debugPrint('[AuthState] Failed to fetch profile: $e');
       _errorMessage = AuthService.parseErrorMessage(e);
       _setStatus(AuthStatus.profileIncomplete);
     }
+  }
+
+  /// Listen to the user's Firestore doc for live updates of denormalized
+  /// stats (rating, totalReviews, totalTrades) and other profile fields.
+  void _subscribeToProfileChanges() {
+    final uid = _firebaseUser?.uid;
+    if (uid == null) return;
+
+    _profileSubscription?.cancel();
+    _profileSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .listen(
+      (doc) {
+        if (!doc.exists || _profile == null) return;
+        final data = doc.data();
+        if (data == null) return;
+
+        // Merge updated stats with existing profile.
+        // We trust Firestore for fields the backend writes directly.
+        final updated = _profile!.mergeFromFirestore(data);
+        if (updated == _profile) return; // no change
+        _profile = updated;
+        debugPrint(
+            '[AuthState] Profile stats updated: rating=${updated.rating}, '
+            'reviews=${updated.totalReviews}, trades=${updated.totalTrades}');
+        notifyListeners();
+      },
+      onError: (err) {
+        debugPrint('[AuthState] Profile listener error: $err');
+      },
+    );
   }
 
   void _setStatus(AuthStatus newStatus) {
@@ -176,6 +220,8 @@ class AuthState extends ChangeNotifier {
 
   Future<void> logout() async {
     debugPrint('[AuthState] logout() called');
+    await _profileSubscription?.cancel();
+    _profileSubscription = null;
     await _authService.logout();
     _firebaseUser = null;
     _profile = null;
@@ -275,6 +321,7 @@ class AuthState extends ChangeNotifier {
   @override
   void dispose() {
     _authSubscription?.cancel();
+    _profileSubscription?.cancel();
     super.dispose();
   }
 }
