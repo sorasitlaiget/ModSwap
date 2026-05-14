@@ -147,4 +147,50 @@ export class ListingsController {
       next(err);
     }
   };
+
+  /**
+   * ⭐ POST /listings/search — Smart semantic search
+   *
+   * Body:
+   *   {
+   *     "query": "flower",
+   *     "category": "others",   // optional filter
+   *     "type": "sell",         // optional filter
+   *     "limit": 20             // optional, default 20
+   *   }
+   */
+  search = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { query, category, type, limit } = req.body as {
+        query?: string;
+        category?: string;
+        type?: string;
+        limit?: number;
+      };
+
+      if (!query || typeof query !== 'string' || query.trim().length === 0) {
+        res.status(400).json({
+          success: false,
+          error: { message: 'Query is required' },
+        });
+        return;
+      }
+
+      const data = await this.service.search({
+        query: query.trim(),
+        category,
+        type,
+        limit,
+      });
+
+      res.json({
+        success: true,
+        data,
+        count: data.length,
+        query,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

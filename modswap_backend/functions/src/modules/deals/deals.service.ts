@@ -76,9 +76,13 @@ export class DealsService {
       dealType: dto.dealType,
     });
 
-    // Fire-and-forget: notify buyer by creating a pending rating document
+    // Fire-and-forget: notify buyer + increment their totalTrades
     this.usersRepo.findByLineId(dto.buyerLineId).then(async (buyer) => {
       if (!buyer || buyer.id === uid) return;
+
+      // ⭐ Increment buyer's totalTrades so both sides reflect the deal
+      await this.usersRepo.incrementTotalTrades(buyer.id);
+
       const seller = await this.usersRepo.findById(uid);
       await this.dealsRepo.createPendingRating({
         buyerUid: buyer.id,
@@ -88,7 +92,9 @@ export class DealsService {
         listingTitle: listing.title,
       });
     }).catch((err) => {
-      logger.warn('Failed to create pending rating', { error: err });
+      logger.warn('Failed to update buyer / create pending rating', {
+        error: err,
+      });
     });
 
     const updatedListing = await this.listingsRepo.findById(listingId);
