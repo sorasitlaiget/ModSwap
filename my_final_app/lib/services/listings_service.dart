@@ -213,6 +213,39 @@ class ListingsService {
   }
 
   // ============================================================
+  // ⭐ Smart Semantic Search (Gemini embeddings on backend)
+  // ============================================================
+
+  /// Smart search using Gemini embeddings + cosine similarity.
+  /// "flower" finds "rose", "ดอกไม้", "bouquet" etc.
+  ///
+  /// Returns list sorted by relevance (highest score first).
+  Future<List<SearchResult>> search({
+    required String query,
+    String? category,
+    String? type,
+    int limit = 20,
+  }) async {
+    try {
+      final res = await _dio.post(
+        '/listings/search',
+        data: {
+          'query': query,
+          if (category != null) 'category': category,
+          if (type != null) 'type': type,
+          'limit': limit,
+        },
+      );
+      final data = res.data['data'] as List<dynamic>;
+      return data
+          .map((j) => SearchResult.fromJson(j as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw _parseError(e);
+    }
+  }
+
+  // ============================================================
   // Error parsing
   // ============================================================
 

@@ -282,3 +282,32 @@ class KmuttPlaces {
     ),
   ];
 }
+
+// ============================================================
+// Search Result (Listing + similarity score from semantic search)
+// ============================================================
+
+/// Wraps a Listing with its similarity score from semantic search.
+/// Returned by `POST /listings/search` endpoint.
+class SearchResult {
+  final Listing listing;
+
+  /// Cosine similarity score (0.0 - 1.0)
+  /// Higher means more semantically similar to the search query.
+  final double score;
+
+  SearchResult({required this.listing, required this.score});
+
+  factory SearchResult.fromJson(Map<String, dynamic> json) {
+    return SearchResult(
+      // Backend returns listing fields + score in the same object,
+      // so we can use the listing's fromJson directly.
+      listing: Listing.fromJson(json),
+      score: (json['score'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  /// Relevance percentage (for UI display)
+  /// 0.75 → "75% match"
+  int get matchPercent => (score * 100).round();
+}
