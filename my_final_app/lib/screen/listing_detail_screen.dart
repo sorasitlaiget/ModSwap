@@ -3,7 +3,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../models/listing.dart';
 import '../models/notification_model.dart';
 import '../services/listings_service.dart';
@@ -166,7 +165,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       if (formData.swapPhoto != null) {
         swapPhotoUrl = await _storageService.uploadSwapPhoto(
           listingId: _listing!.id,
-          file: File(formData.swapPhoto!.path),
+          file: formData.swapPhoto!,
         );
       }
 
@@ -540,9 +539,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                             borderRadius: BorderRadius.circular(
                                               14,
                                             ),
-                                            child: Image.file(
-                                              File(swapPhoto!.path),
-                                              fit: BoxFit.cover,
+                                            child: FutureBuilder<List<int>>(
+                                              future: swapPhoto!.readAsBytes(),
+                                              builder: (ctx, snap) => snap.hasData
+                                                  ? Image.memory(snap.data! as dynamic, fit: BoxFit.cover)
+                                                  : const SizedBox.shrink(),
                                             ),
                                           )
                                         : const Center(
