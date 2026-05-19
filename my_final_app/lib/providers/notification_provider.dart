@@ -44,7 +44,9 @@ class NotificationProvider extends ChangeNotifier {
   Future<void> markAllRead() async {
     if (_uid == null) return;
     await _service.markAllRead(_uid!);
-    _notifications = _notifications.map((n) => n.copyWith(isRead: true)).toList();
+    _notifications = _notifications
+        .map((n) => n.copyWith(isRead: true))
+        .toList();
     notifyListeners();
   }
 

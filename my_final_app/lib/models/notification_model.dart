@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 /// All possible notification categories for ModSwap.
 /// 4 tabs total (Swap tab removed - no in-app swap request flow).
 enum NotificationCategory {
-  buyer,     // wishlist, rating, mark_sold_reminder
-  forYou,    // price_drop, trending, new_item
-  system,    // welcome, email_verified, security, password
+  buyer, // wishlist, rating, mark_sold_reminder
+  forYou, // price_drop, trending, new_item
+  system, // welcome, email_verified, security, password
 }
 
 /// All possible notification types (matches FCM payload "type" field).
@@ -177,7 +177,9 @@ class AppNotification {
 
     if (diff.inMinutes < 1) return 'Just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-    if (diff.inHours < 24) return '${diff.inHours} hour${diff.inHours > 1 ? 's' : ''} ago';
+    if (diff.inHours < 24) {
+      return '${diff.inHours} hour${diff.inHours > 1 ? 's' : ''} ago';
+    }
     if (diff.inDays == 1) {
       return 'Yesterday ${_formatTime(createdAt)}';
     }

@@ -60,7 +60,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    _ratingSubscription = _ratingService.pendingRatingsStream(uid).listen((snapshot) {
+    _ratingSubscription = _ratingService.pendingRatingsStream(uid).listen((
+      snapshot,
+    ) {
       _latestRatingSnapshot = snapshot;
       if (!_showingRatingPopup) _maybeShowRating();
     });
@@ -68,7 +70,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   void _maybeShowRating() {
     final snapshot = _latestRatingSnapshot;
-    if (snapshot == null || snapshot.docs.isEmpty || _showingRatingPopup) return;
+    if (snapshot == null || snapshot.docs.isEmpty || _showingRatingPopup) {
+      return;
+    }
 
     // Deduplicate by listingId — keep the first doc per listing,
     // delete any extras left over from old-format documents.
@@ -77,8 +81,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     for (final doc in snapshot.docs) {
       final listingId = (doc.data()['listingId'] as String?) ?? doc.id;
-      if (_handledListingIds.contains(listingId) || seenListingIds.contains(listingId)) {
-        _ratingService.skipRating(doc.id); // silently delete handled or duplicate
+      if (_handledListingIds.contains(listingId) ||
+          seenListingIds.contains(listingId)) {
+        _ratingService.skipRating(
+          doc.id,
+        ); // silently delete handled or duplicate
       } else {
         seenListingIds.add(listingId);
         docToShow ??= doc;
@@ -87,8 +94,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     if (docToShow == null) return;
 
-    final listingIdToShow = (docToShow.data()['listingId'] as String?) ?? docToShow.id;
-    _handledListingIds.add(listingIdToShow); // mark before showing — prevents re-show if doc lingers
+    final listingIdToShow =
+        (docToShow.data()['listingId'] as String?) ?? docToShow.id;
+    _handledListingIds.add(
+      listingIdToShow,
+    ); // mark before showing — prevents re-show if doc lingers
     final data = docToShow.data();
     _showingRatingPopup = true;
 
@@ -164,9 +174,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       return const HomeScreen(key: ValueKey('home'));
     }
     if (index == 1) {
-      return MyItemsScreen(key: ValueKey('my_items_${DateTime.now().millisecondsSinceEpoch}'));
+      return MyItemsScreen(
+        key: ValueKey('my_items_${DateTime.now().millisecondsSinceEpoch}'),
+      );
     }
-    if (index == 3) {                                       // ← เพิ่ม block นี้
+    if (index == 3) {
+      // ← เพิ่ม block นี้
       return const NotificationScreen(key: ValueKey('notification'));
     }
     if (index == 4) {
@@ -246,9 +259,7 @@ class _MenuPageState extends State<_MenuPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Logout?'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
@@ -264,10 +275,7 @@ class _MenuPageState extends State<_MenuPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.logoutRed,
             ),
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('Logout', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -392,11 +400,12 @@ class _MenuPageState extends State<_MenuPage> {
                             return _MenuRow(
                               icon: Icons.dark_mode_outlined,
                               label: 'Dark Mode',
-                              onTap: () => themeProvider.toggle(!themeProvider.isDark),
+                              onTap: () =>
+                                  themeProvider.toggle(!themeProvider.isDark),
                               trailing: Switch(
                                 value: themeProvider.isDark,
                                 onChanged: themeProvider.toggle,
-                                activeColor: Colors.white,
+                                activeThumbColor: Colors.white,
                                 activeTrackColor: AppColors.orange,
                                 inactiveThumbColor: Colors.white,
                                 inactiveTrackColor: const Color(0xFFD1D5DB),
@@ -495,10 +504,7 @@ class _ProfileSummaryCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   email,
-                  style: TextStyle(
-                    color: context.secondaryText,
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(color: context.secondaryText, fontSize: 11),
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (studentId != null && studentId!.isNotEmpty)
@@ -616,12 +622,9 @@ class _MenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tail = trailing ??
-        const Icon(
-          Icons.chevron_right,
-          color: AppColors.textGray,
-          size: 22,
-        );
+    final tail =
+        trailing ??
+        const Icon(Icons.chevron_right, color: AppColors.textGray, size: 22);
 
     return InkWell(
       onTap: onTap,

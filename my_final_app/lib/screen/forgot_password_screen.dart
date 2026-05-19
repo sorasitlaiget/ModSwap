@@ -61,8 +61,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        scrolledUnderElevation: 0,         
-        surfaceTintColor: Colors.transparent, 
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         iconTheme: const IconThemeData(color: AppColors.navy),
       ),
       body: SafeArea(
@@ -70,8 +70,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 300),
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               child: _emailSent ? _buildSuccessView() : _buildFormView(),
             ),
           ),
@@ -87,20 +86,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-           const SizedBox(height: 2),
-              Image.asset(
-                AppConstants.logoFont,
-                width: 300,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 2),
+          const SizedBox(height: 2),
+          Image.asset(AppConstants.logoFont, width: 300, fit: BoxFit.contain),
+          const SizedBox(height: 2),
 
           // Lock icon
           Center(
             child: Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: AppColors.orange.withOpacity(0.1),
+                color: AppColors.orange.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -196,10 +191,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             onPressed: _loading ? null : () => Navigator.of(context).pop(),
             child: const Text(
               "Back to Login",
-              style: TextStyle(
-                color: AppColors.textGray,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: AppColors.textGray, fontSize: 13),
             ),
           ),
         ],
@@ -212,20 +204,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-         const SizedBox(height: 2),
-              Image.asset(
-                AppConstants.logoFont,
-                width: 300,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 2),
+        const SizedBox(height: 2),
+        Image.asset(AppConstants.logoFont, width: 300, fit: BoxFit.contain),
+        const SizedBox(height: 2),
 
         // Success icon
         Center(
           child: Container(
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -253,10 +241,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const Text(
           "We've sent a password reset link to:",
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textGray,
-          ),
+          style: TextStyle(fontSize: 14, color: AppColors.textGray),
         ),
         const SizedBox(height: 8),
 
@@ -284,8 +269,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.info_outline,
-                      color: AppColors.navy, size: 18),
+                  Icon(Icons.info_outline, color: AppColors.navy, size: 18),
                   SizedBox(width: 8),
                   Text(
                     "Next steps:",
@@ -355,10 +339,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 },
           child: const Text(
             "Didn't receive? Try again",
-            style: TextStyle(
-              color: AppColors.textGray,
-              fontSize: 13,
-            ),
+            style: TextStyle(color: AppColors.textGray, fontSize: 13),
           ),
         ),
       ],
@@ -372,8 +353,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       prefixIcon: icon != null
           ? Icon(icon, color: AppColors.textGray, size: 20)
           : null,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(

@@ -39,20 +39,22 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     setState(() => _loading = true);
     try {
       await context.read<AuthState>().completeProfile(
-            displayName: _displayNameCtrl.text.trim(),
-            studentId: _studentIdCtrl.text.trim(),
-            faculty: _facultyCtrl.text.trim(),
-            lineId: _lineIdCtrl.text.trim(),
-          );
+        displayName: _displayNameCtrl.text.trim(),
+        studentId: _studentIdCtrl.text.trim(),
+        faculty: _facultyCtrl.text.trim(),
+        lineId: _lineIdCtrl.text.trim(),
+      );
       // Fire-and-forget: send welcome notification
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) {
-        NotificationService().send(
-          recipientUid: uid,
-          type: NotificationType.welcome,
-          title: 'Welcome to ModSwap!',
-          body: 'Start buying, selling, and swapping with KMUTT',
-        ).catchError((_) {});
+        NotificationService()
+            .send(
+              recipientUid: uid,
+              type: NotificationType.welcome,
+              title: 'Welcome to ModSwap!',
+              body: 'Start buying, selling, and swapping with KMUTT',
+            )
+            .catchError((_) {});
       }
     } catch (e) {
       if (!mounted) return;
@@ -109,10 +111,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     const Text(
                       "Almost there! Fill in your details so other students can contact you.",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textGray,
-                      ),
+                      style: TextStyle(fontSize: 13, color: AppColors.textGray),
                     ),
                     const SizedBox(height: 24),
 
@@ -142,9 +141,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       controller: _studentIdCtrl,
                       keyboardType: TextInputType.number,
                       maxLength: AppConstants.studentIdLength,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: _inputDecoration(
                         hint:
                             "${AppConstants.studentIdLength}-digit student ID",
@@ -154,8 +151,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         if (v == null || v.trim().isEmpty) {
                           return "Please enter your student ID";
                         }
-                        if (v.trim().length !=
-                            AppConstants.studentIdLength) {
+                        if (v.trim().length != AppConstants.studentIdLength) {
                           return "Student ID must be exactly "
                               "${AppConstants.studentIdLength} digits";
                         }

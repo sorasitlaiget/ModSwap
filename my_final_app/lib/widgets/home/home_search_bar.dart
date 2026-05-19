@@ -41,10 +41,7 @@ class HomeSearchBar extends StatelessWidget {
               textInputAction: TextInputAction.search,
               decoration: const InputDecoration(
                 hintText: 'Search for books, electronics and more...',
-                hintStyle: TextStyle(
-                  color: Color(0xFF9CA3AF),
-                  fontSize: 12,
-                ),
+                hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
                 border: InputBorder.none,
@@ -54,11 +51,7 @@ class HomeSearchBar extends StatelessWidget {
           ),
           GestureDetector(
             onTap: onFilterTap,
-            child: const Icon(
-              Icons.tune,
-              color: Color(0xFF9CA3AF),
-              size: 20,
-            ),
+            child: const Icon(Icons.tune, color: Color(0xFF9CA3AF), size: 20),
           ),
         ],
       ),

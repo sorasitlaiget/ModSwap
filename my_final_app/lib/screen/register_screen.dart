@@ -33,14 +33,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _confirmPassCtrl.dispose();
     super.dispose();
   }
+
   // ค้นหาตำแหน่งใต้ตัวแปร bool ต่างๆ แล้วเพิ่มฟังก์ชันนี้ครับ
-void _onPasswordChanged(String value) {
-  setState(() {
-    _hasMinLength = value.length >= AppConstants.passwordMinLength;
-    _hasUppercase = value.contains(RegExp(r'[A-Z]'));
-    _hasLowercase = value.contains(RegExp(r'[a-z]'));
-  });
-}
+  void _onPasswordChanged(String value) {
+    setState(() {
+      _hasMinLength = value.length >= AppConstants.passwordMinLength;
+      _hasUppercase = value.contains(RegExp(r'[A-Z]'));
+      _hasLowercase = value.contains(RegExp(r'[a-z]'));
+    });
+  }
 
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
@@ -83,13 +84,11 @@ void _onPasswordChanged(String value) {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         icon: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.orange.withOpacity(0.1),
+            color: AppColors.orange.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -135,8 +134,9 @@ void _onPasswordChanged(String value) {
                   _StepRow(number: '2', text: 'Click the verification link'),
                   SizedBox(height: 6),
                   _StepRow(
-                      number: '3',
-                      text: 'Return here — auto-detect verification'),
+                    number: '3',
+                    text: 'Return here — auto-detect verification',
+                  ),
                 ],
               ),
             ),
@@ -176,9 +176,7 @@ void _onPasswordChanged(String value) {
         content: Text(message),
         backgroundColor: AppColors.logoutRed,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
       ),
     );
@@ -226,10 +224,7 @@ void _onPasswordChanged(String value) {
                     const Text(
                       "Join ModSwap with your KMUTT email",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textGray,
-                      ),
+                      style: TextStyle(fontSize: 13, color: AppColors.textGray),
                     ),
                     const SizedBox(height: 24),
 
@@ -260,69 +255,79 @@ void _onPasswordChanged(String value) {
                       controller: _passCtrl,
                       obscureText: _isPasswordObscured,
                       onChanged: _onPasswordChanged,
-                      decoration: _inputDecoration(
-                        hint: "enter your password",
-                        icon: Icons.lock_outline,
-                      ).copyWith(
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isPasswordObscured
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: AppColors.textGray,
-                            size: 20,
+                      decoration:
+                          _inputDecoration(
+                            hint: "enter your password",
+                            icon: Icons.lock_outline,
+                          ).copyWith(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isPasswordObscured
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.textGray,
+                                size: 20,
+                              ),
+                              onPressed: () => setState(() {
+                                _isPasswordObscured = !_isPasswordObscured;
+                              }),
+                            ),
                           ),
-                          onPressed: () => setState(() {
-                            _isPasswordObscured = !_isPasswordObscured;
-                          }),
-                        ),
-                      ),
                       validator: (v) {
-                    if (v == null || v.isEmpty) {
-                      return "Please enter a password";
-                    }
-                    if (!_hasMinLength || !_hasUppercase || !_hasLowercase) {
-      return "Please fulfill all password requirements";
-    }
-                    return null;
-                  },
+                        if (v == null || v.isEmpty) {
+                          return "Please enter a password";
+                        }
+                        if (!_hasMinLength ||
+                            !_hasUppercase ||
+                            !_hasLowercase) {
+                          return "Please fulfill all password requirements";
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 12),
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 4),
-  child: Column(
-    children: [
-      _buildReqItem("At least 8 characters", _hasMinLength),
-      _buildReqItem("Contains uppercase (A-Z)", _hasUppercase),
-      _buildReqItem("Contains lowercase (a-z)", _hasLowercase),
-    ],
-  ),
-),
-const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Column(
+                        children: [
+                          _buildReqItem("At least 8 characters", _hasMinLength),
+                          _buildReqItem(
+                            "Contains uppercase (A-Z)",
+                            _hasUppercase,
+                          ),
+                          _buildReqItem(
+                            "Contains lowercase (a-z)",
+                            _hasLowercase,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
                     _FieldLabel("Confirm Password"),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _confirmPassCtrl,
                       obscureText: _isConfirmPasswordObscured,
-                      decoration: _inputDecoration(
-                        hint: "Re-enter your password",
-                        icon: Icons.lock_outline,
-                      ).copyWith(
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isConfirmPasswordObscured
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: AppColors.textGray,
-                            size: 20,
+                      decoration:
+                          _inputDecoration(
+                            hint: "Re-enter your password",
+                            icon: Icons.lock_outline,
+                          ).copyWith(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isConfirmPasswordObscured
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.textGray,
+                                size: 20,
+                              ),
+                              onPressed: () => setState(() {
+                                _isConfirmPasswordObscured =
+                                    !_isConfirmPasswordObscured;
+                              }),
+                            ),
                           ),
-                          onPressed: () => setState(() {
-                            _isConfirmPasswordObscured =
-                                !_isConfirmPasswordObscured;
-                          }),
-                        ),
-                      ),
                       validator: (v) {
                         if (v == null || v.isEmpty) {
                           return "Please confirm your password";
@@ -332,9 +337,8 @@ const SizedBox(height: 16),
                         }
                         return null;
                       },
-                      
                     ),
-                    
+
                     const SizedBox(height: 16),
 
                     Row(
@@ -474,29 +478,30 @@ const SizedBox(height: 16),
       ),
     );
   }
+
   Widget _buildReqItem(String text, bool isMet) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 4),
-    child: Row(
-      children: [
-        Icon(
-          isMet ? Icons.check_circle : Icons.circle_outlined,
-          size: 14,
-          color: isMet ? Colors.green : AppColors.textGray,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 12,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(
+            isMet ? Icons.check_circle : Icons.circle_outlined,
+            size: 14,
             color: isMet ? Colors.green : AppColors.textGray,
-            fontWeight: isMet ? FontWeight.bold : FontWeight.normal,
           ),
-        ),
-      ],
-    ),
-  );
-}
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              color: isMet ? Colors.green : AppColors.textGray,
+              fontWeight: isMet ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _FieldLabel extends StatelessWidget {

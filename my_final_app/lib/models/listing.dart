@@ -107,11 +107,11 @@ class MeetingPoint {
   }
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'latitude': latitude,
-        'longitude': longitude,
-        'placeId': placeId,
-      };
+    'name': name,
+    'latitude': latitude,
+    'longitude': longitude,
+    'placeId': placeId,
+  };
 
   @override
   bool operator ==(Object other) =>
@@ -211,10 +211,7 @@ class Listing {
   /// Helper: format price as "฿1,500"
   String get formattedPrice {
     if (price == null) return '';
-    return '฿${price!.toInt().toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-        )}';
+    return '฿${price!.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
   }
 
   String get stateLabel => state.displayName;
@@ -245,16 +242,8 @@ class KmuttPlaces {
       latitude: 13.6510,
       longitude: 100.4950,
     ),
-    MeetingPoint(
-      name: 'หอสมุด KMUTT',
-      latitude: 13.6516,
-      longitude: 100.4955,
-    ),
-    MeetingPoint(
-      name: 'โรงอาหารกลาง',
-      latitude: 13.6512,
-      longitude: 100.4944,
-    ),
+    MeetingPoint(name: 'หอสมุด KMUTT', latitude: 13.6516, longitude: 100.4955),
+    MeetingPoint(name: 'โรงอาหารกลาง', latitude: 13.6512, longitude: 100.4944),
     MeetingPoint(
       name: 'อาคารเรียนรวม 2 (CB2)',
       latitude: 13.6509,

@@ -27,7 +27,8 @@ class AuthState extends ChangeNotifier {
 
   /// ⭐ Realtime listener on users/{uid} document.
   /// Keeps profile in sync when backend updates rating/totalTrades/etc.
-  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _profileSubscription;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+  _profileSubscription;
 
   AuthStatus _status = AuthStatus.initializing;
   User? _firebaseUser;
@@ -96,7 +97,8 @@ class AuthState extends ChangeNotifier {
 
       _firebaseUser = refreshed;
       debugPrint(
-          '[AuthState] After reload: emailVerified=${refreshed.emailVerified}');
+        '[AuthState] After reload: emailVerified=${refreshed.emailVerified}',
+      );
 
       if (!refreshed.emailVerified) {
         debugPrint('[AuthState] Setting status to emailUnverified');
@@ -116,7 +118,8 @@ class AuthState extends ChangeNotifier {
     try {
       _profile = await _apiService.getMyProfile();
       debugPrint(
-          '[AuthState] Profile loaded, isComplete=${_profile!.isProfileComplete}');
+        '[AuthState] Profile loaded, isComplete=${_profile!.isProfileComplete}',
+      );
 
       if (_profile!.isProfileComplete) {
         _setStatus(AuthStatus.authenticated);
@@ -146,32 +149,34 @@ class AuthState extends ChangeNotifier {
         .doc(uid)
         .snapshots()
         .listen(
-      (doc) {
-        if (!doc.exists || _profile == null) return;
-        final data = doc.data();
-        if (data == null) return;
+          (doc) {
+            if (!doc.exists || _profile == null) return;
+            final data = doc.data();
+            if (data == null) return;
 
-        // Merge updated stats with existing profile.
-        // We trust Firestore for fields the backend writes directly.
-        final updated = _profile!.mergeFromFirestore(data);
-        if (updated == _profile) return; // no change
-        _profile = updated;
-        debugPrint(
-            '[AuthState] Profile stats updated: rating=${updated.rating}, '
-            'reviews=${updated.totalReviews}, trades=${updated.totalTrades}');
-        notifyListeners();
-      },
-      onError: (err) {
-        debugPrint('[AuthState] Profile listener error: $err');
-      },
-    );
+            // Merge updated stats with existing profile.
+            // We trust Firestore for fields the backend writes directly.
+            final updated = _profile!.mergeFromFirestore(data);
+            if (updated == _profile) return; // no change
+            _profile = updated;
+            debugPrint(
+              '[AuthState] Profile stats updated: rating=${updated.rating}, '
+              'reviews=${updated.totalReviews}, trades=${updated.totalTrades}',
+            );
+            notifyListeners();
+          },
+          onError: (err) {
+            debugPrint('[AuthState] Profile listener error: $err');
+          },
+        );
   }
 
   void _setStatus(AuthStatus newStatus) {
     final oldStatus = _status;
     _status = newStatus;
     debugPrint(
-        '[AuthState] Status: $oldStatus → $newStatus, notifying listeners...');
+      '[AuthState] Status: $oldStatus → $newStatus, notifying listeners...',
+    );
     notifyListeners();
   }
 
@@ -198,17 +203,15 @@ class AuthState extends ChangeNotifier {
     }
   }
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     _errorMessage = null;
 
     try {
       debugPrint('[AuthState] login() called for $email');
       await _authService.login(email: email, password: password);
       debugPrint(
-          '[AuthState] login() succeeded — waiting for authStateChanges to fire');
+        '[AuthState] login() succeeded — waiting for authStateChanges to fire',
+      );
       // Fire-and-forget: check if this is a new device
       _verifyDeviceInBackground();
     } catch (e) {
@@ -292,17 +295,21 @@ class AuthState extends ChangeNotifier {
     await _apiService.changePassword(newPassword);
     final uid = _firebaseUser?.uid;
     if (uid != null) {
-      NotificationService().send(
-        recipientUid: uid,
-        type: NotificationType.passwordChanged,
-        title: 'Password Changed',
-        body: 'Your password was changed successfully.',
-      ).catchError((_) {});
+      NotificationService()
+          .send(
+            recipientUid: uid,
+            type: NotificationType.passwordChanged,
+            title: 'Password Changed',
+            body: 'Your password was changed successfully.',
+          )
+          .catchError((_) {});
     }
   }
 
   void _verifyDeviceInBackground() {
-    _getOrCreateDeviceId().then((id) => _apiService.verifyDevice(id)).catchError((_) {});
+    _getOrCreateDeviceId()
+        .then((id) => _apiService.verifyDevice(id))
+        .catchError((_) {});
   }
 
   Future<String> _getOrCreateDeviceId() async {

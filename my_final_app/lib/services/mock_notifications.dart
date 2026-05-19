@@ -87,15 +87,6 @@ class MockNotifications {
         isRead: true,
       ),
       AppNotification(
-        id: 'n9',
-        type: NotificationType.newItemFromSeller,
-        title: 'New Item from @mod_eng',
-        body: '@mod_eng just posted "Casio fx-991ES Plus"',
-        createdAt: now.subtract(const Duration(days: 4)),
-        isRead: true,
-        deepLinkTarget: '/item/casio-fx-991es',
-      ),
-      AppNotification(
         id: 'n10',
         type: NotificationType.passwordChanged,
         title: 'Password Changed',
@@ -131,24 +122,24 @@ class MockNotifications {
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
 
-    final today_ = <AppNotification>[];
-    final yesterday_ = <AppNotification>[];
+    final todayItems = <AppNotification>[];
+    final yesterdayItems = <AppNotification>[];
     final earlier = <AppNotification>[];
 
     for (final n in items) {
       final d = DateTime(n.createdAt.year, n.createdAt.month, n.createdAt.day);
       if (d == today) {
-        today_.add(n);
+        todayItems.add(n);
       } else if (d == yesterday) {
-        yesterday_.add(n);
+        yesterdayItems.add(n);
       } else {
         earlier.add(n);
       }
     }
 
     final result = <String, List<AppNotification>>{};
-    if (today_.isNotEmpty) result['TODAY'] = today_;
-    if (yesterday_.isNotEmpty) result['YESTERDAY'] = yesterday_;
+    if (todayItems.isNotEmpty) result['TODAY'] = todayItems;
+    if (yesterdayItems.isNotEmpty) result['YESTERDAY'] = yesterdayItems;
     if (earlier.isNotEmpty) result['EARLIER'] = earlier;
     return result;
   }

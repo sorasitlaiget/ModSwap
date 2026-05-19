@@ -181,7 +181,8 @@ class _PostItemScreenState extends State<PostItemScreen> {
 
         // Update listing with full image list
         await _listingsService.update(listing.id, images: finalImages);
-      } else if (_isEdit && _existingUrls.length != widget.existing!.images.length) {
+      } else if (_isEdit &&
+          _existingUrls.length != widget.existing!.images.length) {
         // Existing images were removed
         await _listingsService.update(listing.id, images: finalImages);
       }
@@ -270,8 +271,7 @@ class _PostItemScreenState extends State<PostItemScreen> {
                 ImagePickerGrid(
                   existingUrls: _existingUrls,
                   newFiles: _newFiles,
-                  onFilesChanged: (files) =>
-                      setState(() => _newFiles = files),
+                  onFilesChanged: (files) => setState(() => _newFiles = files),
                   onExistingChanged: (urls) =>
                       setState(() => _existingUrls = urls),
                 ),
@@ -302,11 +302,7 @@ class _PostItemScreenState extends State<PostItemScreen> {
 
                 _label('Price'),
                 const SizedBox(height: 6),
-                _input(
-                  '฿',
-                  _priceCtrl,
-                  keyboardType: TextInputType.number,
-                ),
+                _input('฿', _priceCtrl, keyboardType: TextInputType.number),
                 const SizedBox(height: 18),
 
                 _buildOpenToSwap(),
@@ -348,11 +344,9 @@ class _PostItemScreenState extends State<PostItemScreen> {
             // Loading overlay
             if (_saving)
               Container(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 child: const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.orange,
-                  ),
+                  child: CircularProgressIndicator(color: AppColors.orange),
                 ),
               ),
           ],
@@ -366,13 +360,13 @@ class _PostItemScreenState extends State<PostItemScreen> {
   // ============================================================
 
   Widget _label(String text) => Text(
-        text,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
-          color: AppColors.navy,
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+      color: AppColors.navy,
+    ),
+  );
 
   Widget _input(
     String hint,
@@ -389,14 +383,16 @@ class _PostItemScreenState extends State<PostItemScreen> {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          color: AppColors.textGray.withOpacity(0.7),
+          color: AppColors.textGray.withValues(alpha: 0.7),
           fontSize: 13,
         ),
         suffixIcon: suffixIcon != null
             ? Icon(suffixIcon, color: AppColors.textGray, size: 20)
             : null,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: _inputBorder(),
         enabledBorder: _inputBorder(),
         focusedBorder: _inputBorder(color: AppColors.orange, width: 1.5),
@@ -408,7 +404,7 @@ class _PostItemScreenState extends State<PostItemScreen> {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(
-        color: color ?? AppColors.textGray.withOpacity(0.5),
+        color: color ?? AppColors.textGray.withValues(alpha: 0.5),
         width: width,
       ),
     );
@@ -419,7 +415,7 @@ class _PostItemScreenState extends State<PostItemScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.textGray.withOpacity(0.5)),
+        border: Border.all(color: AppColors.textGray.withValues(alpha: 0.5)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<ListingCategory>(
@@ -428,17 +424,16 @@ class _PostItemScreenState extends State<PostItemScreen> {
           hint: Text(
             'Select Category',
             style: TextStyle(
-              color: AppColors.textGray.withOpacity(0.7),
+              color: AppColors.textGray.withValues(alpha: 0.7),
               fontSize: 13,
             ),
           ),
           icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.navy),
           style: const TextStyle(fontSize: 14, color: AppColors.navy),
           items: ListingCategory.values
-              .map((c) => DropdownMenuItem(
-                    value: c,
-                    child: Text(c.displayName),
-                  ))
+              .map(
+                (c) => DropdownMenuItem(value: c, child: Text(c.displayName)),
+              )
               .toList(),
           onChanged: (v) => setState(() => _category = v),
         ),
@@ -502,10 +497,10 @@ class _PostItemScreenState extends State<PostItemScreen> {
         Switch(
           value: _openToSwap,
           onChanged: (v) => setState(() => _openToSwap = v),
-          activeColor: Colors.white,
+          activeThumbColor: Colors.white,
           activeTrackColor: AppColors.orange,
           inactiveThumbColor: Colors.white,
-          inactiveTrackColor: AppColors.textGray.withOpacity(0.4),
+          inactiveTrackColor: AppColors.textGray.withValues(alpha: 0.4),
         ),
       ],
     );

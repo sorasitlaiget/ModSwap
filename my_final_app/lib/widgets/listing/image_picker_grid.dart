@@ -26,9 +26,9 @@ class ImagePickerGrid extends StatelessWidget {
 
   Future<void> _addImages(BuildContext context) async {
     if (totalCount >= maxCount) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Maximum $maxCount images')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Maximum $maxCount images')));
       return;
     }
 
@@ -90,22 +90,26 @@ class ImagePickerGrid extends StatelessWidget {
     final slots = <Widget>[];
 
     for (var i = 0; i < existingUrls.length; i++) {
-      slots.add(_imageSlot(
-        child: CachedNetworkImage(
-          imageUrl: existingUrls[i],
-          fit: BoxFit.cover,
-          placeholder: (_, __) => Container(color: AppColors.softGray),
-          errorWidget: (_, __, ___) => const Icon(Icons.broken_image),
+      slots.add(
+        _imageSlot(
+          child: CachedNetworkImage(
+            imageUrl: existingUrls[i],
+            fit: BoxFit.cover,
+            placeholder: (_, _) => Container(color: AppColors.softGray),
+            errorWidget: (_, _, _) => const Icon(Icons.broken_image),
+          ),
+          onRemove: () => _removeExisting(i),
         ),
-        onRemove: () => _removeExisting(i),
-      ));
+      );
     }
 
     for (var i = 0; i < newFiles.length; i++) {
-      slots.add(_imageSlot(
-        child: _XFileImage(xfile: newFiles[i]),
-        onRemove: () => _removeFile(i),
-      ));
+      slots.add(
+        _imageSlot(
+          child: _XFileImage(xfile: newFiles[i]),
+          onRemove: () => _removeFile(i),
+        ),
+      );
     }
 
     if (totalCount < maxCount) {
@@ -128,7 +132,9 @@ class ImagePickerGrid extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.textGray.withOpacity(0.3)),
+            border: Border.all(
+              color: AppColors.textGray.withValues(alpha: 0.3),
+            ),
           ),
           clipBehavior: Clip.antiAlias,
           child: child,
@@ -142,7 +148,7 @@ class ImagePickerGrid extends StatelessWidget {
               width: 22,
               height: 22,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
+                color: Colors.black.withValues(alpha: 0.6),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.close, size: 14, color: Colors.white),
@@ -161,7 +167,7 @@ class ImagePickerGrid extends StatelessWidget {
           color: AppColors.softGray,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: AppColors.textGray.withOpacity(0.4),
+            color: AppColors.textGray.withValues(alpha: 0.4),
             width: 1.2,
           ),
         ),
