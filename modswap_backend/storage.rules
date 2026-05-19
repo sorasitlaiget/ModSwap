@@ -1,8 +1,37 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isKmuttEmail() {
+      return isAuthenticated() &&
+             request.auth.token.email != null &&
+             request.auth.token.email.matches('.*@mail[.]kmutt[.]ac[.]th');
+    }
+
+    // Listing images: public read, KMUTT users write only
+    match /listings/{listingId}/{fileName} {
+      allow read: if true;
+      allow write: if isKmuttEmail()
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Profile avatars: public read, owner write only
+    match /users/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isKmuttEmail()
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Default deny
     match /{allPaths=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

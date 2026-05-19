@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/listing.dart';
 import '../services/listings_service.dart';
 import '../services/storage_service.dart';
@@ -37,7 +37,7 @@ class _PostItemScreenState extends State<PostItemScreen> {
   bool _openToSwap = false;
   MeetingPoint? _meetingPoint;
 
-  List<File> _newFiles = [];
+  List<XFile> _newFiles = [];
   List<String> _existingUrls = [];
 
   bool _saving = false;

@@ -1,22 +1,16 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../services/image_service.dart';
 import '../../theme/app_colors.dart';
-import 'package:image_picker/image_picker.dart';
 
-/// Image picker grid — supports both local files (new) and URLs (existing).
-/// Used in Post/Edit Item form. 1-10 images.
+/// Image picker grid — supports both local XFiles (new) and URLs (existing).
+/// Uses XFile + Image.memory() for full web + mobile compatibility.
 class ImagePickerGrid extends StatelessWidget {
-  /// Already-uploaded images (URLs from backend)
   final List<String> existingUrls;
-
-  /// Newly picked files (not yet uploaded)
-  final List<File> newFiles;
-
-  final void Function(List<File>) onFilesChanged;
+  final List<XFile> newFiles;
+  final void Function(List<XFile>) onFilesChanged;
   final void Function(List<String>) onExistingChanged;
-
   final int maxCount;
 
   const ImagePickerGrid({
@@ -95,7 +89,6 @@ class ImagePickerGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final slots = <Widget>[];
 
-    // Existing URLs (from backend)
     for (var i = 0; i < existingUrls.length; i++) {
       slots.add(_imageSlot(
         child: CachedNetworkImage(
@@ -108,15 +101,13 @@ class ImagePickerGrid extends StatelessWidget {
       ));
     }
 
-    // New files (local)
     for (var i = 0; i < newFiles.length; i++) {
       slots.add(_imageSlot(
-        child: Image.file(newFiles[i], fit: BoxFit.cover),
+        child: _XFileImage(xfile: newFiles[i]),
         onRemove: () => _removeFile(i),
       ));
     }
 
-    // Add button (if not full)
     if (totalCount < maxCount) {
       slots.add(_addSlot(context));
     }
@@ -186,6 +177,42 @@ class ImagePickerGrid extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Displays an XFile as an image — works on web (memory) and mobile (file).
+class _XFileImage extends StatefulWidget {
+  final XFile xfile;
+  const _XFileImage({required this.xfile});
+
+  @override
+  State<_XFileImage> createState() => _XFileImageState();
+}
+
+class _XFileImageState extends State<_XFileImage> {
+  late final Future<List<int>> _bytesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _bytesFuture = widget.xfile.readAsBytes();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<int>>(
+      future: _bytesFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Container(color: AppColors.softGray);
+        }
+        return Image.memory(
+          snapshot.data! as dynamic,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
+        );
+      },
     );
   }
 }
