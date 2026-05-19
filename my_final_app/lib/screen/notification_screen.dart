@@ -136,7 +136,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.orange : Colors.white.withValues(alpha: 0.15),
+          color: isActive
+              ? AppColors.orange
+              : Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Center(

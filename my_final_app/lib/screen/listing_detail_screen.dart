@@ -130,7 +130,6 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     return uid != null && _listing?.ownerId == uid;
   }
 
-
   // ============================================================
   // Owner actions
   // ============================================================
@@ -191,13 +190,15 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       // Fire-and-forget: notify seller (self) that deal is recorded
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) {
-        NotificationService().send(
-          recipientUid: uid,
-          type: NotificationType.markSoldReminder,
-          title: 'Deal Complete!',
-          body: '"${_listing!.title}" has been marked as sold.',
-          deepLinkTarget: '/my-items/${_listing!.id}',
-        ).catchError((_) {});
+        NotificationService()
+            .send(
+              recipientUid: uid,
+              type: NotificationType.markSoldReminder,
+              title: 'Deal Complete!',
+              body: '"${_listing!.title}" has been marked as sold.',
+              deepLinkTarget: '/my-items/${_listing!.id}',
+            )
+            .catchError((_) {});
       }
 
       if (mounted) {
@@ -213,23 +214,28 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   void _createPendingRatingForBuyer(String buyerLineId) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null || _listing == null) return;
-    _ratingService.findBuyerUidByLineId(buyerLineId).then((buyerUid) {
-      if (buyerUid == null || buyerUid == uid) return;
-      _ratingService.createPendingRating(
-        buyerUid: buyerUid,
-        sellerId: uid,
-        sellerName: _listing!.ownerName,
-        listingId: _listing!.id,
-        listingTitle: _listing!.title,
-      );
-      NotificationService().send(
-        recipientUid: buyerUid,
-        type: NotificationType.markSoldReminder,
-        title: 'Deal Complete!',
-        body: '"${_listing!.title}" has been sold.',
-        deepLinkTarget: '/item/${_listing!.id}',
-      ).catchError((_) {});
-    }).catchError((_) {});
+    _ratingService
+        .findBuyerUidByLineId(buyerLineId)
+        .then((buyerUid) {
+          if (buyerUid == null || buyerUid == uid) return;
+          _ratingService.createPendingRating(
+            buyerUid: buyerUid,
+            sellerId: uid,
+            sellerName: _listing!.ownerName,
+            listingId: _listing!.id,
+            listingTitle: _listing!.title,
+          );
+          NotificationService()
+              .send(
+                recipientUid: buyerUid,
+                type: NotificationType.markSoldReminder,
+                title: 'Deal Complete!',
+                body: '"${_listing!.title}" has been sold.',
+                deepLinkTarget: '/item/${_listing!.id}',
+              )
+              .catchError((_) {});
+        })
+        .catchError((_) {});
   }
 
   Future<_DealFormData?> _showMarkSoldSheet(Listing listing) {
@@ -277,6 +283,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             }
 
             Future<void> pickPhoto() async {
+              final messenger = ScaffoldMessenger.of(context);
               final imagePicker = ImagePicker();
               try {
                 final pickedFile = await imagePicker.pickImage(
@@ -289,7 +296,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   setState(() => swapPhoto = pickedFile);
                 }
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   SnackBar(
                     content: Text('Failed to pick image: $e'),
                     backgroundColor: Colors.red,
@@ -331,7 +338,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 width: 48,
                                 height: 4,
                                 decoration: BoxDecoration(
-                                  color: AppColors.textGray.withValues(alpha: 0.3),
+                                  color: AppColors.textGray.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
@@ -351,7 +360,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 ),
                                 IconButton(
                                   onPressed: () {
-                                    Future.microtask(() => Navigator.of(ctx).pop(null));
+                                    Navigator.of(ctx).pop();
                                   },
                                   icon: const Icon(Icons.close),
                                 ),
@@ -512,8 +521,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                   decoration: InputDecoration(
                                     filled: true,
                                     fillColor: AppColors.softGray,
-                                    hintText:
-                                        'Item that you got',
+                                    hintText: 'Item that you got',
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       borderSide: BorderSide.none,
@@ -531,7 +539,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                       color: AppColors.softGray,
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: AppColors.textGray.withValues(alpha: 0.3),
+                                        color: AppColors.textGray.withValues(
+                                          alpha: 0.3,
+                                        ),
                                       ),
                                     ),
                                     child: swapPhoto != null
@@ -541,8 +551,12 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                             ),
                                             child: FutureBuilder<List<int>>(
                                               future: swapPhoto!.readAsBytes(),
-                                              builder: (ctx, snap) => snap.hasData
-                                                  ? Image.memory(snap.data! as dynamic, fit: BoxFit.cover)
+                                              builder: (ctx, snap) =>
+                                                  snap.hasData
+                                                  ? Image.memory(
+                                                      snap.data! as dynamic,
+                                                      fit: BoxFit.cover,
+                                                    )
                                                   : const SizedBox.shrink(),
                                             ),
                                           )
@@ -598,14 +612,20 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(16),
                                         borderSide: buyerLineIdError != null
-                                            ? const BorderSide(color: Colors.red)
+                                            ? const BorderSide(
+                                                color: Colors.red,
+                                              )
                                             : BorderSide.none,
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(16),
                                         borderSide: buyerLineIdError != null
-                                            ? const BorderSide(color: Colors.red)
-                                            : const BorderSide(color: AppColors.orange),
+                                            ? const BorderSide(
+                                                color: Colors.red,
+                                              )
+                                            : const BorderSide(
+                                                color: AppColors.orange,
+                                              ),
                                       ),
                                     ),
                                   ),
@@ -613,8 +633,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                     const SizedBox(height: 6),
                                     Row(
                                       children: [
-                                        const Icon(Icons.error_outline,
-                                            size: 14, color: Colors.red),
+                                        const Icon(
+                                          Icons.error_outline,
+                                          size: 14,
+                                          color: Colors.red,
+                                        ),
                                         const SizedBox(width: 4),
                                         Text(
                                           buyerLineIdError!,
@@ -680,7 +703,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 Expanded(
                                   child: OutlinedButton(
                                     onPressed: () {
-                                      Future.microtask(() => Navigator.of(ctx).pop(null));
+                                      Navigator.of(ctx).pop();
                                     },
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: AppColors.navy,
@@ -708,10 +731,14 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                     onPressed: validatingBuyer
                                         ? null
                                         : () async {
-                                            final lineId = buyerCtrl.text.trim();
+                                            final navigator = Navigator.of(ctx);
+                                            final lineId = buyerCtrl.text
+                                                .trim();
                                             if (lineId.isEmpty) {
-                                              setState(() => buyerLineIdError =
-                                                  'Please enter buyer LINE ID');
+                                              setState(
+                                                () => buyerLineIdError =
+                                                    'Please enter buyer LINE ID',
+                                              );
                                               return;
                                             }
                                             setState(() {
@@ -738,32 +765,36 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                               });
                                               return;
                                             }
-                                            setState(() => validatingBuyer = false);
+                                            setState(
+                                              () => validatingBuyer = false,
+                                            );
                                             final dealTypes = [
                                               'cash',
                                               'swap',
-                                              'swap_cash'
+                                              'swap_cash',
                                             ];
                                             final priceVal = selected != 1
                                                 ? double.tryParse(
-                                                    priceCtrl.text.trim())
+                                                    priceCtrl.text.trim(),
+                                                  )
                                                 : null;
                                             final returnVal = selected != 0
-                                                ? (returnCtrl.text.trim().isEmpty
-                                                    ? null
-                                                    : returnCtrl.text.trim())
+                                                ? (returnCtrl.text
+                                                          .trim()
+                                                          .isEmpty
+                                                      ? null
+                                                      : returnCtrl.text.trim())
                                                 : null;
-                                            Future.microtask(
-                                              () => Navigator.of(ctx).pop(
-                                                _DealFormData(
-                                                  dealType: dealTypes[selected],
-                                                  buyerLineId: lineId,
-                                                  dateCompleted:
-                                                      completedAt ?? DateTime.now(),
-                                                  finalPrice: priceVal,
-                                                  whatIGotReturn: returnVal,
-                                                  swapPhoto: swapPhoto,
-                                                ),
+                                            navigator.pop(
+                                              _DealFormData(
+                                                dealType: dealTypes[selected],
+                                                buyerLineId: lineId,
+                                                dateCompleted:
+                                                    completedAt ??
+                                                    DateTime.now(),
+                                                finalPrice: priceVal,
+                                                whatIGotReturn: returnVal,
+                                                swapPhoto: swapPhoto,
                                               ),
                                             );
                                           },
@@ -823,7 +854,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? AppColors.orange.withValues(alpha: 0.12) : Colors.white,
+          color: selected
+              ? AppColors.orange.withValues(alpha: 0.12)
+              : Colors.white,
           border: Border.all(
             color: selected
                 ? AppColors.orange
@@ -1147,7 +1180,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           itemBuilder: (_, i) => CachedNetworkImage(
             imageUrl: l.images[i],
             fit: BoxFit.cover,
-            placeholder: (_, __) => Container(color: AppColors.softGray),
+            placeholder: (_, _) => Container(color: AppColors.softGray),
             errorWidget: (_, _, _) => Container(
               color: AppColors.softGray,
               child: const Icon(Icons.broken_image),
@@ -1235,7 +1268,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 if (_sellerRating != null && (_sellerTotalReviews ?? 0) > 0)
                   Row(
                     children: [
-                      const Icon(Icons.star_rounded, size: 15, color: Color(0xFFFFA000)),
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 15,
+                        color: Color(0xFFFFA000),
+                      ),
                       const SizedBox(width: 3),
                       Text(
                         _sellerRating!.toStringAsFixed(1),
@@ -1547,23 +1584,34 @@ class _RatingSheetState extends State<_RatingSheet> {
 
   String get _ratingLabel {
     switch (_rating) {
-      case 1: return '1.0 - Poor';
-      case 2: return '2.0 - Not great';
-      case 3: return '3.0 - Okay';
-      case 4: return '4.0 - Good';
-      case 5: return '5.0 - Excellent';
-      default: return 'Tap a star to rate';
+      case 1:
+        return '1.0 - Poor';
+      case 2:
+        return '2.0 - Not great';
+      case 3:
+        return '3.0 - Okay';
+      case 4:
+        return '4.0 - Good';
+      case 5:
+        return '5.0 - Excellent';
+      default:
+        return 'Tap a star to rate';
     }
   }
 
   Color _starColor(int index) {
     if (_rating == 0 || index > _rating) return AppColors.textGray;
     switch (_rating) {
-      case 1: return Colors.red;
-      case 2: return Colors.deepOrange;
-      case 3: return Colors.amber;
-      case 4: return Colors.green;
-      default: return AppColors.orange;
+      case 1:
+        return Colors.red;
+      case 2:
+        return Colors.deepOrange;
+      case 3:
+        return Colors.amber;
+      case 4:
+        return Colors.green;
+      default:
+        return AppColors.orange;
     }
   }
 

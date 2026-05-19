@@ -10,7 +10,7 @@ import '../widgets/home/home_header.dart';
 import '../widgets/home/welcome_banner.dart';
 import '../widgets/home/home_search_bar.dart';
 import '../widgets/home/category_chips.dart';
-import '../widgets/listing/listing_card_real.dart'; 
+import '../widgets/listing/listing_card_real.dart';
 import 'listing_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -139,13 +139,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Text(
                   'Filter by Type',
                   style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.navy),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.navy,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 ListTile(
-                  leading: const Icon(Icons.all_inclusive, color: AppColors.orange),
+                  leading: const Icon(
+                    Icons.all_inclusive,
+                    color: AppColors.orange,
+                  ),
                   title: const Text('All Items'),
                   onTap: () => Navigator.pop(context, 'all'),
                 ),
@@ -155,7 +159,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () => Navigator.pop(context, 'sell'),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.swap_horiz, color: AppColors.orange),
+                  leading: const Icon(
+                    Icons.swap_horiz,
+                    color: AppColors.orange,
+                  ),
                   title: const Text('Open to Swap'),
                   onTap: () => Navigator.pop(context, 'trade'),
                 ),
@@ -199,16 +206,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               Stack(
-                alignment: Alignment.bottomCenter, // จัดให้กล่องอยู่ตำแหน่งล่างสุดของ Stack เสมอ
+                alignment: Alignment
+                    .bottomCenter, // จัดให้กล่องอยู่ตำแหน่งล่างสุดของ Stack เสมอ
                 children: [
                   // 1. ส่วนแบนเนอร์สีน้ำเงิน และ "พื้นที่ล่องหน" ที่เราเติมเข้าไปเพื่อให้ Stack สูงพอที่จะคลุมกล่อง
                   Column(
                     children: [
                       WelcomeBanner(userName: userName),
-                      const SizedBox(height: 55), // 🎯 พื้นที่ล่องหน! ทำให้กล่องด้านล่างไม่ล้นกรอบและ "กดได้"
+                      const SizedBox(
+                        height: 55,
+                      ), // 🎯 พื้นที่ล่องหน! ทำให้กล่องด้านล่างไม่ล้นกรอบและ "กดได้"
                     ],
                   ),
-                  
+
                   // 2. กล่อง Search และ Category (เปลี่ยนมาใช้ Padding ธรรมดาแทน)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -219,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -243,7 +253,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 15), // 🎯 8. ขยับระยะห่างตรงนี้เพิ่ม (จาก 56 เป็น 70) เพื่อหลบกล่องที่ขยับลงมา
+              const SizedBox(
+                height: 15,
+              ), // 🎯 8. ขยับระยะห่างตรงนี้เพิ่ม (จาก 56 เป็น 70) เพื่อหลบกล่องที่ขยับลงมา
 
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),

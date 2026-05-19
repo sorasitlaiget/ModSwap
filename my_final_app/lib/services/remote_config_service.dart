@@ -11,16 +11,16 @@ class RemoteConfigService {
   static const String _keySemanticSearch = 'enable_semantic_search';
 
   Future<void> initialize() async {
-    await _remoteConfig.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(seconds: 10),
-      minimumFetchInterval: kDebugMode
-          ? const Duration(seconds: 0)
-          : const Duration(minutes: 60),
-    ));
+    await _remoteConfig.setConfigSettings(
+      RemoteConfigSettings(
+        fetchTimeout: const Duration(seconds: 10),
+        minimumFetchInterval: kDebugMode
+            ? const Duration(seconds: 0)
+            : const Duration(minutes: 60),
+      ),
+    );
 
-    await _remoteConfig.setDefaults({
-      _keySemanticSearch: true,
-    });
+    await _remoteConfig.setDefaults({_keySemanticSearch: true});
 
     try {
       await _remoteConfig.fetchAndActivate();

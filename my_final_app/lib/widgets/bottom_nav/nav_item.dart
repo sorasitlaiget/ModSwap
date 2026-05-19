@@ -30,7 +30,7 @@ class NavItem extends StatelessWidget {
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        splashColor: AppColors.orange.withOpacity(0.1),
+        splashColor: AppColors.orange.withValues(alpha: 0.1),
         highlightColor: Colors.transparent,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -50,10 +50,7 @@ class NavItem extends StatelessWidget {
                     transitionBuilder: (child, animation) {
                       return ScaleTransition(
                         scale: animation,
-                        child: FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        ),
+                        child: FadeTransition(opacity: animation, child: child),
                       );
                     },
                     child: Icon(

@@ -77,11 +77,19 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   obscure: _obscureNew,
                   onToggle: () => setState(() => _obscureNew = !_obscureNew),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Please enter a new password';
+                    if (v == null || v.isEmpty) {
+                      return 'Please enter a new password';
+                    }
                     if (v.length < 8) return 'At least 8 characters';
-                    if (!RegExp(r'[a-z]').hasMatch(v)) return 'Must contain a lowercase letter';
-                    if (!RegExp(r'[A-Z]').hasMatch(v)) return 'Must contain an uppercase letter';
-                    if (!RegExp(r'[0-9]').hasMatch(v)) return 'Must contain a number';
+                    if (!RegExp(r'[a-z]').hasMatch(v)) {
+                      return 'Must contain a lowercase letter';
+                    }
+                    if (!RegExp(r'[A-Z]').hasMatch(v)) {
+                      return 'Must contain an uppercase letter';
+                    }
+                    if (!RegExp(r'[0-9]').hasMatch(v)) {
+                      return 'Must contain a number';
+                    }
                     return null;
                   },
                 ),
@@ -90,9 +98,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   controller: _confirmCtrl,
                   label: 'Confirm New Password',
                   obscure: _obscureConfirm,
-                  onToggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  onToggle: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
                   validator: (v) {
-                    if (v != _newPasswordCtrl.text) return 'Passwords do not match';
+                    if (v != _newPasswordCtrl.text) {
+                      return 'Passwords do not match';
+                    }
                     return null;
                   },
                 ),
@@ -181,7 +192,9 @@ class _PasswordField extends StatelessWidget {
           borderSide: const BorderSide(color: Colors.red, width: 1.5),
         ),
         suffixIcon: IconButton(
-          icon: Icon(obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+          icon: Icon(
+            obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          ),
           onPressed: onToggle,
           color: AppColors.textGray,
         ),

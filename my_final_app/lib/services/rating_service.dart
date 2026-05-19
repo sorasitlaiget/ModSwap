@@ -54,7 +54,9 @@ class RatingService {
     required String pendingRatingId,
     required int rating,
   }) async {
-    final pendingRef = _firestore.collection('pendingRatings').doc(pendingRatingId);
+    final pendingRef = _firestore
+        .collection('pendingRatings')
+        .doc(pendingRatingId);
 
     // Read outside transaction to capture recipient info for notification
     final pendingSnap = await pendingRef.get();
@@ -94,13 +96,16 @@ class RatingService {
 
     // Fire-and-forget: notify seller they received a rating
     if (sellerId.isNotEmpty) {
-      _notifService.send(
-        recipientUid: sellerId,
-        type: NotificationType.ratingReceived,
-        title: 'New Rating Received',
-        body: 'You received $rating star${rating != 1 ? 's' : ''} for "$listingTitle"',
-        data: {'stars': rating, 'listingTitle': listingTitle},
-      ).catchError((_) {});
+      _notifService
+          .send(
+            recipientUid: sellerId,
+            type: NotificationType.ratingReceived,
+            title: 'New Rating Received',
+            body:
+                'You received $rating star${rating != 1 ? 's' : ''} for "$listingTitle"',
+            data: {'stars': rating, 'listingTitle': listingTitle},
+          )
+          .catchError((_) {});
     }
   }
 

@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Nitro\\\\Desktop\\\\ModSwap\" -Force)",
-      "Bash(Select-Object Name, FullName)"
+      "Bash(Select-Object Name, FullName)",
+      "Bash(dart format *)",
+      "Bash(flutter analyze *)"
     ]
   }
 }

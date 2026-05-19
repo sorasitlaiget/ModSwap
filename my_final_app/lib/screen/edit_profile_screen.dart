@@ -35,9 +35,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     final profile = context.read<AuthState>().profile;
     _displayNameCtrl = TextEditingController(text: profile?.displayName ?? '');
-    _studentIdCtrl   = TextEditingController(text: profile?.studentId   ?? '');
-    _facultyCtrl     = TextEditingController(text: profile?.faculty     ?? '');
-    _lineIdCtrl      = TextEditingController(text: profile?.lineId      ?? '');
+    _studentIdCtrl = TextEditingController(text: profile?.studentId ?? '');
+    _facultyCtrl = TextEditingController(text: profile?.faculty ?? '');
+    _lineIdCtrl = TextEditingController(text: profile?.lineId ?? '');
   }
 
   @override
@@ -60,16 +60,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       // 1) Save text fields (only if changed)
       final profile = auth.profile!;
       String? newDisplayName = _displayNameCtrl.text.trim();
-      String? newStudentId   = _studentIdCtrl.text.trim();
-      String? newFaculty     = _facultyCtrl.text.trim();
-      String? newLineId      = _lineIdCtrl.text.trim();
+      String? newStudentId = _studentIdCtrl.text.trim();
+      String? newFaculty = _facultyCtrl.text.trim();
+      String? newLineId = _lineIdCtrl.text.trim();
 
-      if (newDisplayName == profile.displayName)  newDisplayName = null;
-      if (newStudentId   == (profile.studentId   ?? '')) newStudentId = null;
-      if (newFaculty     == (profile.faculty     ?? '')) newFaculty   = null;
-      if (newLineId      == (profile.lineId      ?? '')) newLineId    = null;
+      if (newDisplayName == profile.displayName) newDisplayName = null;
+      if (newStudentId == (profile.studentId ?? '')) newStudentId = null;
+      if (newFaculty == (profile.faculty ?? '')) newFaculty = null;
+      if (newLineId == (profile.lineId ?? '')) newLineId = null;
 
-      final hasFieldChanges = newDisplayName != null ||
+      final hasFieldChanges =
+          newDisplayName != null ||
           newStudentId != null ||
           newFaculty != null ||
           newLineId != null;
@@ -95,7 +96,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Failed to save: ${e.toString().replaceAll('Exception: ', '')}'),
+          content: Text(
+            'Failed to save: ${e.toString().replaceAll('Exception: ', '')}',
+          ),
           backgroundColor: AppColors.logoutRed,
         ),
       );
@@ -122,7 +125,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               width: double.infinity,
               color: AppColors.navy,
               padding: EdgeInsets.fromLTRB(
-                  16, MediaQuery.of(context).padding.top + 12, 16, 28),
+                16,
+                MediaQuery.of(context).padding.top + 12,
+                16,
+                28,
+              ),
               child: Column(
                 children: [
                   Row(
@@ -186,15 +193,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 14),
-                      _LabeledField(
-                        label: 'Faculty',
-                        controller: _facultyCtrl,
-                      ),
+                      _LabeledField(label: 'Faculty', controller: _facultyCtrl),
                       const SizedBox(height: 14),
-                      _LabeledField(
-                        label: 'Line ID',
-                        controller: _lineIdCtrl,
-                      ),
+                      _LabeledField(label: 'Line ID', controller: _lineIdCtrl),
 
                       const SizedBox(height: 28),
                       SizedBox(
@@ -255,8 +256,7 @@ class _BackCircleButton extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.orange, width: 2),
         ),
-        child: const Icon(Icons.arrow_back,
-            color: AppColors.orange, size: 20),
+        child: const Icon(Icons.arrow_back, color: AppColors.orange, size: 20),
       ),
     );
   }
@@ -309,8 +309,10 @@ class _LabeledField extends StatelessWidget {
           decoration: InputDecoration(
             filled: true,
             fillColor: context.cardBg,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: 14,
+            ),
             suffixIcon: readOnly
                 ? null
                 : Icon(Icons.edit, size: 18, color: context.secondaryText),

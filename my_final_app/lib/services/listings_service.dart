@@ -8,7 +8,7 @@ class ListingsService {
   final DioClient _dioClient;
 
   ListingsService({DioClient? dioClient})
-      : _dioClient = dioClient ?? DioClient(AuthService());
+    : _dioClient = dioClient ?? DioClient(AuthService());
 
   Dio get _dio => _dioClient.dio;
 

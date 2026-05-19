@@ -18,9 +18,7 @@ import 'theme/app_colors.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Crashlytics — disabled on web (not supported)
   if (!kIsWeb) {
@@ -98,7 +96,9 @@ class ModSwapApp extends StatelessWidget {
               canvasColor: const Color(0xFF1E1E1E),
               cardColor: const Color(0xFF1E1E1E),
               dividerColor: const Color(0xFF2A2A2A),
-              dialogBackgroundColor: const Color(0xFF1E1E1E),
+              dialogTheme: const DialogThemeData(
+                backgroundColor: Color(0xFF1E1E1E),
+              ),
               colorScheme: ColorScheme.fromSeed(
                 seedColor: AppColors.orange,
                 primary: AppColors.orange,

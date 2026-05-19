@@ -40,10 +40,7 @@ class WelcomeBanner extends StatelessWidget {
                 const SizedBox(height: 4),
                 const Text(
                   'What do you need to buying today?',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.white70),
                 ),
               ],
             ),
@@ -54,10 +51,7 @@ class WelcomeBanner extends StatelessWidget {
             'images/ModSwap.png',
             width: 110,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const SizedBox(
-              width: 110,
-              height: 80,
-            ),
+            errorBuilder: (_, _, _) => const SizedBox(width: 110, height: 80),
           ),
         ],
       ),

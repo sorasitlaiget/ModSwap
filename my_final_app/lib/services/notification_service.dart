@@ -14,9 +14,11 @@ class NotificationService {
         .orderBy('createdAt', descending: true)
         .limit(50)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => AppNotification.fromMap(d.id, d.data()))
-            .toList());
+        .map(
+          (snap) => snap.docs
+              .map((d) => AppNotification.fromMap(d.id, d.data()))
+              .toList(),
+        );
   }
 
   // ─── Write ───────────────────────────────────────────────────────────────
@@ -38,10 +40,9 @@ class NotificationService {
       deepLinkTarget: deepLinkTarget,
       data: data,
     );
-    await _col(recipientUid).add({
-      ...notif.toMap(),
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    await _col(
+      recipientUid,
+    ).add({...notif.toMap(), 'createdAt': FieldValue.serverTimestamp()});
   }
 
   // ─── Mark as read ────────────────────────────────────────────────────────
