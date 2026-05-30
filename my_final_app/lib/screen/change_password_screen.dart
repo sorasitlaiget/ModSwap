@@ -192,6 +192,7 @@ class _PasswordField extends StatelessWidget {
           borderSide: const BorderSide(color: Colors.red, width: 1.5),
         ),
         suffixIcon: IconButton(
+          tooltip: obscure ? 'Show password' : 'Hide password',
           icon: Icon(
             obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
           ),

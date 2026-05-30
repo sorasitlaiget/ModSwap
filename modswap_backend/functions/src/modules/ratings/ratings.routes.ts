@@ -10,6 +10,7 @@ import {
   ForbiddenError,
   NotFoundError,
 } from '../../core/errors/app-error';
+import { sendNotification } from '../../utils/notification.util';
 
 const submitRatingSchema = z.object({
   pendingRatingId: z.string().min(1),
@@ -37,12 +38,18 @@ export function createRatingsRouter(): Router {
 
       const pendingRef = firestore.collection(COLLECTIONS.PENDING_RATINGS).doc(pendingRatingId);
 
+      let sellerId = '';
+      let listingTitle = '';
+
       await firestore.runTransaction(async (tx) => {
         const pendingDoc = await tx.get(pendingRef);
         if (!pendingDoc.exists) throw new NotFoundError('Pending rating not found');
 
         const pending = pendingDoc.data()!;
         if (pending.buyerUid !== uid) throw new ForbiddenError('This rating request does not belong to you');
+
+        sellerId = pending.sellerId;
+        listingTitle = pending.listingTitle ?? '';
 
         const sellerRef = firestore.collection(COLLECTIONS.USERS).doc(pending.sellerId);
         const sellerDoc = await tx.get(sellerRef);
@@ -61,6 +68,18 @@ export function createRatingsRouter(): Router {
         });
         tx.delete(pendingRef);
       });
+
+      // Notify seller they received a rating (fire-and-forget)
+      if (sellerId) {
+        sendNotification({
+          recipientUid: sellerId,
+          type: 'ratingReceived',
+          title: 'New Rating Received',
+          body: listingTitle
+            ? `You received a ${rating}-star rating for "${listingTitle}".`
+            : `You received a ${rating}-star rating.`,
+        }).catch(() => null);
+      }
 
       res.json(successResponse({ message: 'Rating submitted' }));
     } catch (err) {

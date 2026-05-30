@@ -64,6 +64,12 @@ export class AuthService {
       );
     }
 
+    // ตรวจ studentId ซ้ำกับ user อื่น
+    const conflict = await this.usersRepo.findByStudentId(dto.studentId, uid);
+    if (conflict) {
+      throw new ConflictError('Student ID is already in use', 'STUDENT_ID_CONFLICT');
+    }
+
     await this.usersRepo.update(uid, {
       displayName: dto.displayName,
       studentId: dto.studentId,

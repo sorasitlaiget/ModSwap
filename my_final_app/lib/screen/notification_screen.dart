@@ -130,9 +130,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   Widget _tab(NotificationCategory? cat, String label) {
     final isActive = _selectedCategory == cat;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedCategory = cat),
-      child: AnimatedContainer(
+    return Semantics(
+      button: true,
+      label: 'Filter notifications: $label',
+      selected: isActive,
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedCategory = cat),
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
@@ -152,6 +156,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -159,14 +164,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
     Map<String, List<AppNotification>> grouped,
     NotificationProvider provider,
   ) {
-    return ListView(
+    // Flatten into a list of (header | notification) items for lazy rendering
+    final items = <Object>[];
+    for (final entry in grouped.entries) {
+      items.add(entry.key); // String = section header
+      items.addAll(entry.value);
+    }
+
+    return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      children: grouped.entries.expand((entry) {
-        return <Widget>[
-          Padding(
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        if (item is String) {
+          return Padding(
             padding: const EdgeInsets.only(top: 8, bottom: 8, left: 4),
             child: Text(
-              entry.key,
+              item,
               style: TextStyle(
                 color: context.secondaryText,
                 fontSize: 11,
@@ -174,16 +188,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 letterSpacing: 0.8,
               ),
             ),
-          ),
-          ...entry.value.map(
-            (n) => _NotificationCard(
-              notification: n,
-              onTap: () => provider.markRead(n.id),
-              onDelete: () => provider.delete(n.id),
-            ),
-          ),
-        ];
-      }).toList(),
+          );
+        }
+        final n = item as AppNotification;
+        return _NotificationCard(
+          notification: n,
+          onTap: () => provider.markRead(n.id),
+          onDelete: () => provider.delete(n.id),
+        );
+      },
     );
   }
 
@@ -234,10 +247,13 @@ class _NotificationCard extends StatelessWidget {
         ? const Color(0xFF2A1A10)
         : AppColors.unreadBg;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
+    return Semantics(
+      button: true,
+      label: 'Notification: ${notification.title}. ${notification.body}',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: notification.isRead ? context.cardBg : unreadCardBg,
@@ -313,18 +329,23 @@ class _NotificationCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                 ],
-                GestureDetector(
-                  onTap: onDelete,
-                  behavior: HitTestBehavior.opaque,
-                  child: Icon(
-                    Icons.delete_outline,
-                    size: 18,
-                    color: context.secondaryText,
+                Semantics(
+                  button: true,
+                  label: 'Delete notification',
+                  child: GestureDetector(
+                    onTap: onDelete,
+                    behavior: HitTestBehavior.opaque,
+                    child: Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: context.secondaryText,
+                    ),
                   ),
                 ),
               ],
             ),
           ],
+        ),
         ),
       ),
     );

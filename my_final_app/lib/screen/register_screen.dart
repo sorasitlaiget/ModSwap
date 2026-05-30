@@ -203,12 +203,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       AppConstants.logoMascot,
                       height: 180,
                       fit: BoxFit.contain,
+                      semanticLabel: 'ModSwap mascot logo',
                     ),
                     const SizedBox(height: 2),
                     Image.asset(
                       AppConstants.logoFont,
                       height: 120,
                       fit: BoxFit.contain,
+                      semanticLabel: 'ModSwap',
                     ),
                     const SizedBox(height: 2),
                     const Text(
@@ -261,6 +263,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             icon: Icons.lock_outline,
                           ).copyWith(
                             suffixIcon: IconButton(
+                              tooltip: _isPasswordObscured ? 'Show password' : 'Hide password',
                               icon: Icon(
                                 _isPasswordObscured
                                     ? Icons.visibility_off_outlined
@@ -315,6 +318,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             icon: Icons.lock_outline,
                           ).copyWith(
                             suffixIcon: IconButton(
+                              tooltip: _isConfirmPasswordObscured ? 'Show confirm password' : 'Hide confirm password',
                               icon: Icon(
                                 _isConfirmPasswordObscured
                                     ? Icons.visibility_off_outlined
@@ -420,16 +424,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             fontSize: 13,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: _loading
-                              ? null
-                              : () => Navigator.of(context).pop(),
-                          child: const Text(
-                            "Login",
-                            style: TextStyle(
-                              color: AppColors.orange,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
+                        Semantics(
+                          button: true,
+                          label: 'Go to Login',
+                          child: GestureDetector(
+                            onTap: _loading
+                                ? null
+                                : () => Navigator.of(context).pop(),
+                            child: const Text(
+                              "Login",
+                              style: TextStyle(
+                                color: AppColors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ),

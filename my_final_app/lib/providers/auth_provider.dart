@@ -10,6 +10,7 @@ import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../services/dio_client.dart';
 import '../services/notification_service.dart';
+import '../utils/logger.dart';
 
 enum AuthStatus {
   initializing,
@@ -61,13 +62,13 @@ class AuthState extends ChangeNotifier {
 
   Future<void> _onAuthChange(User? user) async {
     if (_processingAuthChange) {
-      debugPrint('[AuthState] Already processing, skipping...');
+      AppLogger.d('[AuthState] Already processing, skipping...');
       return;
     }
     _processingAuthChange = true;
 
     try {
-      debugPrint('[AuthState] Auth state changed: user=${user?.email}');
+      AppLogger.d('[AuthState] Auth state changed: user=${user?.email}');
 
       if (user == null) {
         await _profileSubscription?.cancel();
@@ -84,7 +85,7 @@ class AuthState extends ChangeNotifier {
         await user.reload();
         await user.getIdToken(true);
       } catch (e) {
-        debugPrint('[AuthState] reload failed: $e');
+        AppLogger.e('[AuthState] reload failed', error: e);
       }
 
       final refreshed = _authService.currentUser;
@@ -96,18 +97,16 @@ class AuthState extends ChangeNotifier {
       }
 
       _firebaseUser = refreshed;
-      debugPrint(
-        '[AuthState] After reload: emailVerified=${refreshed.emailVerified}',
-      );
+      AppLogger.d('[AuthState] After reload: emailVerified=${refreshed.emailVerified}');
 
       if (!refreshed.emailVerified) {
-        debugPrint('[AuthState] Setting status to emailUnverified');
+        AppLogger.d('[AuthState] Setting status to emailUnverified');
         _profile = null;
         _setStatus(AuthStatus.emailUnverified);
         return;
       }
 
-      debugPrint('[AuthState] Email verified, fetching profile...');
+      AppLogger.d('[AuthState] Email verified, fetching profile...');
       await _fetchProfile();
     } finally {
       _processingAuthChange = false;
@@ -117,9 +116,7 @@ class AuthState extends ChangeNotifier {
   Future<void> _fetchProfile() async {
     try {
       _profile = await _apiService.getMyProfile();
-      debugPrint(
-        '[AuthState] Profile loaded, isComplete=${_profile!.isProfileComplete}',
-      );
+      AppLogger.d('[AuthState] Profile loaded, isComplete=${_profile!.isProfileComplete}');
 
       if (_profile!.isProfileComplete) {
         _setStatus(AuthStatus.authenticated);
@@ -131,7 +128,7 @@ class AuthState extends ChangeNotifier {
       // totalTrades stay in sync when backend updates them.
       _subscribeToProfileChanges();
     } catch (e) {
-      debugPrint('[AuthState] Failed to fetch profile: $e');
+      AppLogger.e('[AuthState] Failed to fetch profile', error: e);
       _errorMessage = AuthService.parseErrorMessage(e);
       _setStatus(AuthStatus.profileIncomplete);
     }
@@ -159,14 +156,11 @@ class AuthState extends ChangeNotifier {
             final updated = _profile!.mergeFromFirestore(data);
             if (updated == _profile) return; // no change
             _profile = updated;
-            debugPrint(
-              '[AuthState] Profile stats updated: rating=${updated.rating}, '
-              'reviews=${updated.totalReviews}, trades=${updated.totalTrades}',
-            );
+            AppLogger.d('[AuthState] Profile stats updated: rating=${updated.rating}, reviews=${updated.totalReviews}, trades=${updated.totalTrades}');
             notifyListeners();
           },
           onError: (err) {
-            debugPrint('[AuthState] Profile listener error: $err');
+            AppLogger.e('[AuthState] Profile listener error', error: err);
           },
         );
   }
@@ -174,9 +168,7 @@ class AuthState extends ChangeNotifier {
   void _setStatus(AuthStatus newStatus) {
     final oldStatus = _status;
     _status = newStatus;
-    debugPrint(
-      '[AuthState] Status: $oldStatus → $newStatus, notifying listeners...',
-    );
+    AppLogger.d('[AuthState] Status: $oldStatus → $newStatus');
     notifyListeners();
   }
 
@@ -207,11 +199,9 @@ class AuthState extends ChangeNotifier {
     _errorMessage = null;
 
     try {
-      debugPrint('[AuthState] login() called for $email');
+      AppLogger.d('[AuthState] login() called for $email');
       await _authService.login(email: email, password: password);
-      debugPrint(
-        '[AuthState] login() succeeded — waiting for authStateChanges to fire',
-      );
+      AppLogger.d('[AuthState] login() succeeded — waiting for authStateChanges to fire');
       // Fire-and-forget: check if this is a new device
       _verifyDeviceInBackground();
     } catch (e) {
@@ -222,7 +212,7 @@ class AuthState extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    debugPrint('[AuthState] logout() called');
+    AppLogger.d('[AuthState] logout() called');
     await _profileSubscription?.cancel();
     _profileSubscription = null;
     await _authService.logout();

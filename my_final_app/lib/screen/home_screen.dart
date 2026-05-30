@@ -125,46 +125,43 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showFilterBottomSheet() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
+      builder: (ctx) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.textGray.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 const Text(
                   'Filter by Type',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppColors.navy,
                   ),
                 ),
                 const SizedBox(height: 16),
-                ListTile(
-                  leading: const Icon(
-                    Icons.all_inclusive,
-                    color: AppColors.orange,
-                  ),
-                  title: const Text('All Items'),
-                  onTap: () => Navigator.pop(context, 'all'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.sell, color: AppColors.orange),
-                  title: const Text('For Sale'),
-                  onTap: () => Navigator.pop(context, 'sell'),
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.swap_horiz,
-                    color: AppColors.orange,
-                  ),
-                  title: const Text('Open to Swap'),
-                  onTap: () => Navigator.pop(context, 'trade'),
+                Row(
+                  children: [
+                    _TypeOption(icon: Icons.all_inclusive, label: 'All Items', value: 'all', current: _filterType),
+                    const SizedBox(width: 10),
+                    _TypeOption(icon: Icons.sell_outlined, label: 'For Sale', value: 'sell', current: _filterType),
+                    const SizedBox(width: 10),
+                    _TypeOption(icon: Icons.swap_horiz, label: 'Open to Swap', value: 'trade', current: _filterType),
+                  ],
                 ),
               ],
             ),
@@ -344,6 +341,64 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (_, i) => ListingCard(
           listing: _listings[i],
           onTap: () => _openDetail(_listings[i]),
+        ),
+      ),
+    );
+  }
+}
+
+class _TypeOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final String? current;
+
+  const _TypeOption({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.current,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = (current == null && value == 'all') || current == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => Navigator.pop(context, value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.orange.withValues(alpha: 0.1)
+                : AppColors.softGray,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected ? AppColors.orange : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? AppColors.orange : AppColors.navy,
+                size: 26,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? AppColors.orange : AppColors.navy,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

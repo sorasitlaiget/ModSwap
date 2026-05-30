@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../config/constants.dart';
 import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
+import '../services/biometric_service.dart';
 import '../theme/app_colors.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
@@ -22,6 +23,25 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
   bool _rememberMe = true;
   String? _loginError;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometric();
+  }
+
+  Future<void> _checkBiometric() async {
+    final available = await BiometricService.instance.isAvailable();
+    final enabled = await BiometricService.instance.isEnabled();
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = available;
+        _biometricEnabled = enabled;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -37,16 +57,40 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _loading = true);
     try {
+      final email = _emailCtrl.text.trim();
+      final password = _passwordCtrl.text;
       final auth = context.read<AuthState>();
-      await auth.login(
-        email: _emailCtrl.text.trim(),
-        password: _passwordCtrl.text,
-      );
+      if (_rememberMe && _biometricAvailable) {
+        await BiometricService.instance.saveCredentials(email, password);
+      }
+      await auth.login(email: email, password: password);
       return;
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _loginError = AuthService.parseErrorMessage(e); // ← เก็บใน state
+        _loginError = AuthService.parseErrorMessage(e);
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    final authenticated = await BiometricService.instance.authenticate();
+    if (!authenticated || !mounted) return;
+
+    final creds = await BiometricService.instance.loadCredentials();
+    if (creds == null || !mounted) return;
+
+    setState(() => _loading = true);
+    try {
+      await context.read<AuthState>().login(
+        email: creds.email,
+        password: creds.password,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loginError = AuthService.parseErrorMessage(e);
         _loading = false;
       });
     }
@@ -73,12 +117,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       AppConstants.logoMascot,
                       height: 180,
                       fit: BoxFit.contain,
+                      semanticLabel: 'ModSwap mascot logo',
                     ),
                     const SizedBox(height: 2),
                     Image.asset(
                       AppConstants.logoFont,
                       height: 120,
                       fit: BoxFit.contain,
+                      semanticLabel: 'ModSwap',
                     ),
                     const SizedBox(height: 2),
 
@@ -152,6 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             hasError: _loginError != null,
                           ).copyWith(
                             suffixIcon: IconButton(
+                              tooltip: _isObscured ? 'Show password' : 'Hide password',
                               icon: Icon(
                                 _isObscured
                                     ? Icons.visibility_off_outlined
@@ -200,22 +247,26 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                         ),
-                        GestureDetector(
-                          onTap: _loading
-                              ? null
-                              : () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        const ForgotPasswordScreen(),
+                        Semantics(
+                          button: true,
+                          label: 'Forgot Password',
+                          child: GestureDetector(
+                            onTap: _loading
+                                ? null
+                                : () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const ForgotPasswordScreen(),
+                                    ),
                                   ),
-                                ),
-                          child: const Text(
-                            "Forgot Password?",
-                            style: TextStyle(
-                              color: AppColors.orange,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
+                            child: const Text(
+                              "Forgot Password?",
+                              style: TextStyle(
+                                color: AppColors.orange,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ),
@@ -254,6 +305,40 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                       ),
                     ),
+                    if (_biometricAvailable && _biometricEnabled) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              'or',
+                              style: TextStyle(color: AppColors.textGray),
+                            ),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 50,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.navy),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                          ),
+                          onPressed: _loading ? null : _handleBiometricLogin,
+                          icon: const Icon(Icons.fingerprint, color: AppColors.navy),
+                          label: const Text(
+                            'Sign in with Biometrics',
+                            style: TextStyle(color: AppColors.navy, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
 
                     // Register link
@@ -268,21 +353,25 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontSize: 13,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: _loading
-                              ? null
-                              : () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const RegisterScreen(),
+                        Semantics(
+                          button: true,
+                          label: 'Register a new account',
+                          child: GestureDetector(
+                            onTap: _loading
+                                ? null
+                                : () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const RegisterScreen(),
+                                    ),
                                   ),
-                                ),
-                          child: const Text(
-                            "Register",
-                            style: TextStyle(
-                              color: AppColors.orange,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
+                            child: const Text(
+                              "Register",
+                              style: TextStyle(
+                                color: AppColors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ),

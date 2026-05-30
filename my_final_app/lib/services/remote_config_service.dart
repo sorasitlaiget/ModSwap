@@ -1,5 +1,6 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
+import '../utils/logger.dart';
 
 class RemoteConfigService {
   static final RemoteConfigService _instance = RemoteConfigService._internal();
@@ -25,7 +26,7 @@ class RemoteConfigService {
     try {
       await _remoteConfig.fetchAndActivate();
     } catch (e) {
-      debugPrint('[RemoteConfig] fetch failed, using defaults: $e');
+      AppLogger.e('[RemoteConfig] fetch failed, using defaults', error: e);
     }
   }
 

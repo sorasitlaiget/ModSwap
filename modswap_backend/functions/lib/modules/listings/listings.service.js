@@ -256,7 +256,7 @@ class ListingsService {
         if (!query)
             return [];
         const limit = params.limit ?? 20;
-        const minScore = params.minScore ?? 0.62;
+        const minScore = params.minScore ?? 0.6;
         // 1. Embed the query
         const queryEmbedding = await (0, embedding_util_1.embedQuery)(query);
         if (!queryEmbedding) {

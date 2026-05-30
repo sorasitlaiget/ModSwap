@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import '../utils/logger.dart';
 
 /// Service for picking + compressing images before upload.
 /// Returns XFile on all platforms (web-safe).
@@ -18,7 +19,7 @@ class ImageService {
       if (picked == null) return null;
       return kIsWeb ? picked : await _compress(picked);
     } catch (e) {
-      debugPrint('[ImageService] pickFromGallery ERROR: $e');
+      AppLogger.e('[ImageService] pickFromGallery ERROR', error: e);
       return null;
     }
   }
@@ -32,7 +33,7 @@ class ImageService {
       if (picked == null) return null;
       return kIsWeb ? picked : await _compress(picked);
     } catch (e) {
-      debugPrint('[ImageService] pickFromCamera ERROR: $e');
+      AppLogger.e('[ImageService] pickFromCamera ERROR', error: e);
       return null;
     }
   }
@@ -49,7 +50,7 @@ class ImageService {
       }
       return result;
     } catch (e) {
-      debugPrint('[ImageService] pickMultiple ERROR: $e');
+      AppLogger.e('[ImageService] pickMultiple ERROR', error: e);
       return [];
     }
   }
@@ -74,7 +75,7 @@ class ImageService {
 
       return result ?? xfile;
     } catch (e) {
-      debugPrint('[ImageService] compress ERROR: $e');
+      AppLogger.e('[ImageService] compress ERROR', error: e);
       return xfile;
     }
   }

@@ -14,6 +14,7 @@ import 'providers/theme_provider.dart';
 import 'screen/auth_gate.dart';
 import 'services/remote_config_service.dart';
 import 'theme/app_colors.dart';
+import 'utils/logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,7 +51,7 @@ void main() async {
   // Create AuthState ONCE here (outside the widget tree)
   // This ensures it persists and there's exactly one instance
   final authState = AuthState.create();
-  debugPrint('[main] AuthState created');
+  AppLogger.d('[main] AuthState created');
 
   runApp(ModSwapApp(authState: authState));
 }
@@ -62,7 +63,7 @@ class ModSwapApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('[ModSwapApp] building');
+    AppLogger.d('[ModSwapApp] building');
 
     return MultiProvider(
       providers: [

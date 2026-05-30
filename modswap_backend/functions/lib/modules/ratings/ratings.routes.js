@@ -10,6 +10,7 @@ const firebase_config_1 = require("../../config/firebase.config");
 const constants_1 = require("../../config/constants");
 const response_util_1 = require("../../utils/response.util");
 const app_error_1 = require("../../core/errors/app-error");
+const notification_util_1 = require("../../utils/notification.util");
 const submitRatingSchema = zod_1.z.object({
     pendingRatingId: zod_1.z.string().min(1),
     rating: zod_1.z.number().int().min(1).max(5),
@@ -29,6 +30,8 @@ function createRatingsRouter() {
             const uid = req.uid;
             const { pendingRatingId, rating } = req.body;
             const pendingRef = firebase_config_1.firestore.collection(constants_1.COLLECTIONS.PENDING_RATINGS).doc(pendingRatingId);
+            let sellerId = '';
+            let listingTitle = '';
             await firebase_config_1.firestore.runTransaction(async (tx) => {
                 const pendingDoc = await tx.get(pendingRef);
                 if (!pendingDoc.exists)
@@ -36,6 +39,8 @@ function createRatingsRouter() {
                 const pending = pendingDoc.data();
                 if (pending.buyerUid !== uid)
                     throw new app_error_1.ForbiddenError('This rating request does not belong to you');
+                sellerId = pending.sellerId;
+                listingTitle = pending.listingTitle ?? '';
                 const sellerRef = firebase_config_1.firestore.collection(constants_1.COLLECTIONS.USERS).doc(pending.sellerId);
                 const sellerDoc = await tx.get(sellerRef);
                 if (!sellerDoc.exists)
@@ -52,6 +57,17 @@ function createRatingsRouter() {
                 });
                 tx.delete(pendingRef);
             });
+            // Notify seller they received a rating (fire-and-forget)
+            if (sellerId) {
+                (0, notification_util_1.sendNotification)({
+                    recipientUid: sellerId,
+                    type: 'ratingReceived',
+                    title: 'New Rating Received',
+                    body: listingTitle
+                        ? `You received a ${rating}-star rating for "${listingTitle}".`
+                        : `You received a ${rating}-star rating.`,
+                }).catch(() => null);
+            }
             res.json((0, response_util_1.successResponse)({ message: 'Rating submitted' }));
         }
         catch (err) {

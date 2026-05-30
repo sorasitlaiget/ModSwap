@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// All possible notification categories for ModSwap.
 /// 4 tabs total (Swap tab removed - no in-app swap request flow).
 enum NotificationCategory {
-  buyer, // wishlist, rating, mark_sold_reminder
+  buyer, // wishlist, markSoldReminder, rating, rateRequest
   forYou, // price_drop, trending, new_item
   system, // welcome, email_verified, security, password
 }
@@ -12,9 +12,9 @@ enum NotificationCategory {
 enum NotificationType {
   // Buyer (seller-side activity)
   wishlist,
+  markSoldReminder,
   ratingReceived,
   rateRequest,
-  markSoldReminder,
 
   // For You (recommendations)
   priceDrop,
@@ -31,9 +31,9 @@ extension NotificationTypeProps on NotificationType {
   NotificationCategory get category {
     switch (this) {
       case NotificationType.wishlist:
+      case NotificationType.markSoldReminder:
       case NotificationType.ratingReceived:
       case NotificationType.rateRequest:
-      case NotificationType.markSoldReminder:
         return NotificationCategory.buyer;
       case NotificationType.priceDrop:
       case NotificationType.trending:
@@ -50,12 +50,12 @@ extension NotificationTypeProps on NotificationType {
     switch (this) {
       case NotificationType.wishlist:
         return Icons.favorite;
+      case NotificationType.markSoldReminder:
+        return Icons.check_circle;
       case NotificationType.ratingReceived:
         return Icons.star;
       case NotificationType.rateRequest:
         return Icons.star_border;
-      case NotificationType.markSoldReminder:
-        return Icons.check_circle_outline;
       case NotificationType.priceDrop:
         return Icons.trending_down;
       case NotificationType.trending:

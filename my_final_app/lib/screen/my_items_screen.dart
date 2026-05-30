@@ -202,35 +202,22 @@ class _MyItemsScreenState extends State<MyItemsScreen>
         icon = Icons.inbox_outlined;
     }
 
-    return RefreshIndicator(
-      onRefresh: _refreshAll,
-      color: AppColors.orange,
-      child: ListView(
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-          Icon(
-            icon,
-            size: 80,
-            color: AppColors.textGray.withValues(alpha: 0.4),
-          ),
+          Icon(icon, size: 80, color: AppColors.textGray.withValues(alpha: 0.4)),
           const SizedBox(height: 16),
-          Center(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.navy,
-              ),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.navy,
             ),
           ),
           const SizedBox(height: 6),
-          Center(
-            child: Text(
-              subtitle,
-              style: const TextStyle(color: AppColors.textGray),
-            ),
-          ),
+          Text(subtitle, style: const TextStyle(color: AppColors.textGray)),
         ],
       ),
     );
