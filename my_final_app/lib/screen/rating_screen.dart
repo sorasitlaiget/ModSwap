@@ -150,14 +150,19 @@ class _RatingScreenState extends State<RatingScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (index) {
                     final starIndex = index + 1;
-                    return GestureDetector(
-                      onTap: () => setState(() => _rating = starIndex),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Icon(
-                          starIndex <= _rating ? Icons.star : Icons.star_border,
-                          size: 44,
-                          color: _ratingColor(starIndex),
+                    return Semantics(
+                      button: true,
+                      label: 'Rate $starIndex star${starIndex == 1 ? '' : 's'}',
+                      selected: _rating == starIndex,
+                      child: GestureDetector(
+                        onTap: () => setState(() => _rating = starIndex),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(
+                            starIndex <= _rating ? Icons.star : Icons.star_border,
+                            size: 44,
+                            color: _ratingColor(starIndex),
+                          ),
                         ),
                       ),
                     );

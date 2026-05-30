@@ -61,8 +61,8 @@ class MockNotifications {
       AppNotification(
         id: 'n6',
         type: NotificationType.markSoldReminder,
-        title: 'Mark as Sold Reminder',
-        body: 'Did you complete the deal for "Apple Pencil"? Update it.',
+        title: 'Deal Complete!',
+        body: '"Apple Pencil" has been marked as sold.',
         createdAt: now.subtract(const Duration(days: 1, hours: 18)),
         isRead: true,
         deepLinkTarget: '/my-items/apple-pencil',

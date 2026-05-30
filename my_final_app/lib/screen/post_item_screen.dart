@@ -233,6 +233,7 @@ class _PostItemScreenState extends State<PostItemScreen> {
         backgroundColor: AppColors.navy,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Go back',
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: _saving ? null : () => Navigator.pop(context),
         ),
@@ -410,32 +411,144 @@ class _PostItemScreenState extends State<PostItemScreen> {
     );
   }
 
-  Widget _categoryDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.textGray.withValues(alpha: 0.5)),
+  static const _categoryIcons = {
+    ListingCategory.textbooks: Icons.menu_book_outlined,
+    ListingCategory.electronics: Icons.devices_outlined,
+    ListingCategory.fashion: Icons.checkroom_outlined,
+    ListingCategory.dorm: Icons.home_outlined,
+    ListingCategory.vehicles: Icons.directions_car_outlined,
+    ListingCategory.others: Icons.category_outlined,
+  };
+
+  Future<void> _pickCategory() async {
+    final picked = await showModalBottomSheet<ListingCategory>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<ListingCategory>(
-          isExpanded: true,
-          value: _category,
-          hint: Text(
-            'Select Category',
-            style: TextStyle(
-              color: AppColors.textGray.withValues(alpha: 0.7),
-              fontSize: 13,
-            ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textGray.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Select Category',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.navy,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GridView.count(
+                crossAxisCount: 3,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1.1,
+                children: ListingCategory.values.map((c) {
+                  final isSelected = _category == c;
+                  return GestureDetector(
+                    onTap: () => Navigator.pop(ctx, c),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.orange.withValues(alpha: 0.1)
+                            : AppColors.softGray,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.orange
+                              : Colors.transparent,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _categoryIcons[c] ?? Icons.category_outlined,
+                            color: isSelected
+                                ? AppColors.orange
+                                : AppColors.navy,
+                            size: 28,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            c.displayName,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isSelected
+                                  ? AppColors.orange
+                                  : AppColors.navy,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
-          icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.navy),
-          style: const TextStyle(fontSize: 14, color: AppColors.navy),
-          items: ListingCategory.values
-              .map(
-                (c) => DropdownMenuItem(value: c, child: Text(c.displayName)),
-              )
-              .toList(),
-          onChanged: (v) => setState(() => _category = v),
+        ),
+      ),
+    );
+    if (picked != null) setState(() => _category = picked);
+  }
+
+  Widget _categoryDropdown() {
+    return GestureDetector(
+      onTap: _pickCategory,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: _category != null
+                ? AppColors.orange
+                : AppColors.textGray.withValues(alpha: 0.5),
+            width: _category != null ? 1.5 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            if (_category != null) ...[
+              Icon(
+                _categoryIcons[_category] ?? Icons.category_outlined,
+                color: AppColors.orange,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+            ],
+            Expanded(
+              child: Text(
+                _category?.displayName ?? 'Select Category',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: _category != null
+                      ? AppColors.navy
+                      : AppColors.textGray.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+            const Icon(Icons.keyboard_arrow_down, color: AppColors.navy),
+          ],
         ),
       ),
     );
@@ -444,24 +557,29 @@ class _PostItemScreenState extends State<PostItemScreen> {
   Widget _conditionBtn(ListingCondition cond) {
     final isActive = _condition == cond;
     return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _condition = cond),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.navy : Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.navy, width: 1.2),
-          ),
-          child: Center(
-            child: Text(
-              cond.displayName,
-              style: TextStyle(
-                color: isActive ? Colors.white : AppColors.navy,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                letterSpacing: 0.5,
+      child: Semantics(
+        button: true,
+        label: 'Set condition: ${cond.displayName}',
+        selected: isActive,
+        child: GestureDetector(
+          onTap: () => setState(() => _condition = cond),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: isActive ? AppColors.navy : Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.navy, width: 1.2),
+            ),
+            child: Center(
+              child: Text(
+                cond.displayName,
+                style: TextStyle(
+                  color: isActive ? Colors.white : AppColors.navy,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           ),

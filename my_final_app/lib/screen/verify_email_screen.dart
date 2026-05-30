@@ -126,6 +126,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 AppConstants.logoFont,
                 width: 300,
                 fit: BoxFit.contain,
+                semanticLabel: 'ModSwap',
               ),
               const SizedBox(height: 2),
               Container(

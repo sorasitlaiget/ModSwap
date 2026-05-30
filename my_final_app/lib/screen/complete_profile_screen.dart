@@ -23,6 +23,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final _lineIdCtrl = TextEditingController();
 
   bool _loading = false;
+  String? _studentIdError;
 
   @override
   void dispose() {
@@ -58,13 +59,18 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: AppColors.logoutRed,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      final msg = e.toString();
+      if (msg.contains('STUDENT_ID_CONFLICT') || msg.contains('Student ID is already in use')) {
+        setState(() => _studentIdError = 'Student ID is already in use');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: AppColors.logoutRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -90,12 +96,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       AppConstants.logoMascot,
                       height: 180,
                       fit: BoxFit.contain,
+                      semanticLabel: 'ModSwap mascot logo',
                     ),
                     const SizedBox(height: 4),
                     Image.asset(
                       AppConstants.logoFont,
                       height: 120,
                       fit: BoxFit.contain,
+                      semanticLabel: 'ModSwap',
                     ),
                     const SizedBox(height: 20),
                     const Text(
@@ -142,10 +150,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       keyboardType: TextInputType.number,
                       maxLength: AppConstants.studentIdLength,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onChanged: (_) {
+                        if (_studentIdError != null) {
+                          setState(() => _studentIdError = null);
+                        }
+                      },
                       decoration: _inputDecoration(
-                        hint:
-                            "${AppConstants.studentIdLength}-digit student ID",
+                        hint: "${AppConstants.studentIdLength}-digit student ID",
                         icon: Icons.badge_outlined,
+                        hasError: _studentIdError != null,
                       ).copyWith(counterText: ''),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
@@ -161,6 +174,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         return null;
                       },
                     ),
+                    if (_studentIdError != null) ...[
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16),
+                        child: Text(
+                          _studentIdError!,
+                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
 
                     _FieldLabel("Faculty"),
@@ -241,7 +264,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
   }
 
-  InputDecoration _inputDecoration({required String hint, IconData? icon}) {
+  InputDecoration _inputDecoration({required String hint, IconData? icon, bool hasError = false}) {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: AppColors.textGray, fontSize: 14),
@@ -257,7 +280,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
+        borderSide: hasError
+            ? const BorderSide(color: Colors.red, width: 1)
+            : BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),

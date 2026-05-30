@@ -12,20 +12,30 @@ service firebase.storage {
              request.auth.token.email.matches('.*@mail[.]kmutt[.]ac[.]th');
     }
 
-    // Listing images: public read, KMUTT users write only
-    match /listings/{listingId}/{fileName} {
+    // Listing images: listings/{userId}/{listingId}/{fileName}
+    match /listings/{userId}/{listingId}/{fileName} {
       allow read: if true;
       allow write: if isKmuttEmail()
+                   && request.auth.uid == userId
                    && request.resource.size < 10 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
     }
 
-    // Profile avatars: public read, owner write only
-    match /users/{userId}/{fileName} {
+    // Profile avatars: avatars/{userId}/{fileName}
+    match /avatars/{userId}/{fileName} {
       allow read: if true;
       allow write: if isKmuttEmail()
                    && request.auth.uid == userId
                    && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Deal swap photos: deals/{userId}/{listingId}/{fileName}
+    match /deals/{userId}/{listingId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isKmuttEmail()
+                   && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
     }
 

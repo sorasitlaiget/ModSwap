@@ -44,6 +44,11 @@ class AuthService {
         if (user.studentId && user.lineId) {
             throw new app_error_1.ConflictError('Profile already completed. Use update endpoint instead.', 'PROFILE_ALREADY_COMPLETED');
         }
+        // ตรวจ studentId ซ้ำกับ user อื่น
+        const conflict = await this.usersRepo.findByStudentId(dto.studentId, uid);
+        if (conflict) {
+            throw new app_error_1.ConflictError('Student ID is already in use', 'STUDENT_ID_CONFLICT');
+        }
         await this.usersRepo.update(uid, {
             displayName: dto.displayName,
             studentId: dto.studentId,

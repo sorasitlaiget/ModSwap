@@ -26,6 +26,10 @@ dependencies:
   # HTTP client
   dio: ^5.4.0
 
+  # Biometric auth
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.2.2
+
   # Image handling
   image_picker: ^1.1.2
   flutter_image_compress: ^2.3.0

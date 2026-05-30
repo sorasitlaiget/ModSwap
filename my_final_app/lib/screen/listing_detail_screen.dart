@@ -186,7 +186,6 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
 
       // Fire-and-forget: notify buyer via Firestore pending rating
       _createPendingRatingForBuyer(formData.buyerLineId);
-
       // Fire-and-forget: notify seller (self) that deal is recorded
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) {
@@ -196,7 +195,6 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               type: NotificationType.markSoldReminder,
               title: 'Deal Complete!',
               body: '"${_listing!.title}" has been marked as sold.',
-              deepLinkTarget: '/my-items/${_listing!.id}',
             )
             .catchError((_) {});
       }
@@ -359,6 +357,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                   ),
                                 ),
                                 IconButton(
+                                  tooltip: 'Close',
                                   onPressed: () {
                                     Navigator.of(ctx).pop();
                                   },
@@ -531,7 +530,10 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                               ),
                               buildField(
                                 'Photo of the Swap Item',
-                                GestureDetector(
+                                Semantics(
+                                  button: true,
+                                  label: 'Upload photo of the swap item',
+                                  child: GestureDetector(
                                   onTap: pickPhoto,
                                   child: Container(
                                     height: 110,
@@ -579,6 +581,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                             ),
                                           ),
                                   ),
+                                ),
                                 ),
                               ),
                             ],
@@ -654,45 +657,49 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                             ),
                             buildField(
                               'Date Completed',
-                              GestureDetector(
-                                onTap: () async {
-                                  final picked = await showDatePicker(
-                                    context: context,
-                                    initialDate: completedAt ?? DateTime.now(),
-                                    firstDate: DateTime(2020),
-                                    lastDate: DateTime.now(),
-                                  );
-                                  if (picked != null) {
-                                    setState(() => completedAt = picked);
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 18,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.softGray,
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        completedAt != null
-                                            ? '${completedAt!.day.toString().padLeft(2, '0')}/${completedAt!.month.toString().padLeft(2, '0')}/${completedAt!.year}'
-                                            : 'Select date',
-                                        style: const TextStyle(
-                                          color: AppColors.navy,
+                              Semantics(
+                                button: true,
+                                label: 'Select date completed',
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    final picked = await showDatePicker(
+                                      context: context,
+                                      initialDate: completedAt ?? DateTime.now(),
+                                      firstDate: DateTime(2020),
+                                      lastDate: DateTime.now(),
+                                    );
+                                    if (picked != null) {
+                                      setState(() => completedAt = picked);
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 18,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.softGray,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          completedAt != null
+                                              ? '${completedAt!.day.toString().padLeft(2, '0')}/${completedAt!.month.toString().padLeft(2, '0')}/${completedAt!.year}'
+                                              : 'Select date',
+                                          style: const TextStyle(
+                                            color: AppColors.navy,
+                                          ),
                                         ),
-                                      ),
-                                      const Icon(
-                                        Icons.calendar_today_outlined,
-                                        size: 18,
-                                        color: AppColors.textGray,
-                                      ),
-                                    ],
+                                        const Icon(
+                                          Icons.calendar_today_outlined,
+                                          size: 18,
+                                          color: AppColors.textGray,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1383,6 +1390,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           child: Row(
             children: [
               IconButton(
+                tooltip: 'Delete listing',
                 onPressed: _delete,
                 icon: const Icon(Icons.delete_outline, color: Colors.red),
               ),
@@ -1457,6 +1465,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 ),
               ),
               child: IconButton(
+                tooltip: _isInWishlist ? 'Remove from wishlist' : 'Add to wishlist',
                 onPressed: _wishlistLoading ? null : _toggleWishlist,
                 icon: _wishlistLoading
                     ? const SizedBox(
@@ -1716,14 +1725,19 @@ class _RatingSheetState extends State<_RatingSheet> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (index) {
               final star = index + 1;
-              return GestureDetector(
-                onTap: () => setState(() => _rating = star),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: Icon(
-                    star <= _rating ? Icons.star : Icons.star_border,
-                    size: 44,
-                    color: _starColor(star),
+              return Semantics(
+                button: true,
+                label: 'Rate $star star${star == 1 ? '' : 's'}',
+                selected: _rating == star,
+                child: GestureDetector(
+                  onTap: () => setState(() => _rating = star),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Icon(
+                      star <= _rating ? Icons.star : Icons.star_border,
+                      size: 44,
+                      color: _starColor(star),
+                    ),
                   ),
                 ),
               );
