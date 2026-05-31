@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../models/listing.dart';
+import '../domain/entities/listing.dart';
 import 'auth_service.dart';
 import 'dio_client.dart';
 

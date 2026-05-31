@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../models/user_profile.dart';
+import '../domain/entities/user_profile.dart';
 import 'dio_client.dart';
 
 /// API Service - calls Backend Cloud Functions

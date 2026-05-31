@@ -1,4 +1,4 @@
-import '../models/notification_model.dart';
+import '../domain/entities/notification.dart';
 
 /// Mock notification data for frontend development.
 /// Replace with Firestore stream from `users/{userId}/notifications/` later.

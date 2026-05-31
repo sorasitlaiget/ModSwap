@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/notification_model.dart';
+import '../domain/entities/notification.dart';
 
 class NotificationService {
   final _firestore = FirebaseFirestore.instance;

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -8,7 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 import 'config/api_config.dart';
-import 'providers/theme_notifier.dart';
+import 'presentation/providers/theme_notifier.dart';
 import 'router/app_router.dart';
 import 'services/remote_config_service.dart';
 import 'theme/app_colors.dart';
@@ -20,6 +21,9 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   if (!kIsWeb) {
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+      !kDebugMode,
+    );
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
     PlatformDispatcher.instance.onError = (error, stack) {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
@@ -43,7 +47,14 @@ void main() async {
 
   AppLogger.d('[main] Starting ModSwap');
 
-  runApp(const ProviderScope(child: ModSwapApp()));
+  runZonedGuarded(() => runApp(const ProviderScope(child: ModSwapApp())), (
+    error,
+    stack,
+  ) {
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    }
+  });
 }
 
 class ModSwapApp extends ConsumerWidget {
