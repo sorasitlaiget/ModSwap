@@ -3,21 +3,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'config/api_config.dart';
 import 'providers/auth_provider.dart';
+import 'providers/notification_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screen/auth_gate.dart';
+import 'services/remote_config_service.dart';
 import 'theme/app_colors.dart';
+import 'utils/logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Crashlytics — disabled on web (not supported)
+  if (!kIsWeb) {
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  }
+
+  // Remote Config feature flags
+  await RemoteConfigService().initialize();
 
   if (ApiConfig.useEmulator) {
     await FirebaseAuth.instance.useAuthEmulator(
@@ -37,7 +51,7 @@ void main() async {
   // Create AuthState ONCE here (outside the widget tree)
   // This ensures it persists and there's exactly one instance
   final authState = AuthState.create();
-  debugPrint('[main] AuthState created');
+  AppLogger.d('[main] AuthState created');
 
   runApp(ModSwapApp(authState: authState));
 }
@@ -49,12 +63,15 @@ class ModSwapApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('[ModSwapApp] building');
+    AppLogger.d('[ModSwapApp] building');
 
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthState>.value(value: authState),
         ChangeNotifierProvider<ThemeProvider>(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider<NotificationProvider>(
+          create: (_) => NotificationProvider(),
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
@@ -80,7 +97,9 @@ class ModSwapApp extends StatelessWidget {
               canvasColor: const Color(0xFF1E1E1E),
               cardColor: const Color(0xFF1E1E1E),
               dividerColor: const Color(0xFF2A2A2A),
-              dialogBackgroundColor: const Color(0xFF1E1E1E),
+              dialogTheme: const DialogThemeData(
+                backgroundColor: Color(0xFF1E1E1E),
+              ),
               colorScheme: ColorScheme.fromSeed(
                 seedColor: AppColors.orange,
                 primary: AppColors.orange,

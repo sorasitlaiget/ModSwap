@@ -63,4 +63,60 @@ class UserProfile {
       isProfileComplete: isProfileComplete,
     );
   }
+
+  /// ⭐ Merge updates from Firestore document snapshot.
+  /// Backend writes to users/{uid} directly when:
+  ///  - Deal completed → totalTrades incremented
+  ///  - Rating submitted → rating + totalReviews recalculated
+  ///  - Profile edited → displayName / lineId / studentId / faculty changed
+  ///
+  /// This keeps the UI in sync without needing to call the API again.
+  UserProfile mergeFromFirestore(Map<String, dynamic> data) {
+    return UserProfile(
+      id: id,
+      email: (data['email'] as String?) ?? email,
+      displayName: (data['displayName'] as String?) ?? displayName,
+      lineId: (data['lineId'] as String?) ?? lineId,
+      studentId: (data['studentId'] as String?) ?? studentId,
+      faculty: (data['faculty'] as String?) ?? faculty,
+      photoURL: (data['photoURL'] as String?) ?? photoURL,
+      rating: ((data['rating'] as num?) ?? rating).toDouble(),
+      totalReviews: (data['totalReviews'] as int?) ?? totalReviews,
+      totalTrades: (data['totalTrades'] as int?) ?? totalTrades,
+      isProfileComplete: isProfileComplete,
+    );
+  }
+
+  /// Used so we can detect "did anything actually change?" before notifying.
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is UserProfile &&
+        other.id == id &&
+        other.email == email &&
+        other.displayName == displayName &&
+        other.lineId == lineId &&
+        other.studentId == studentId &&
+        other.faculty == faculty &&
+        other.photoURL == photoURL &&
+        other.rating == rating &&
+        other.totalReviews == totalReviews &&
+        other.totalTrades == totalTrades &&
+        other.isProfileComplete == isProfileComplete;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    email,
+    displayName,
+    lineId,
+    studentId,
+    faculty,
+    photoURL,
+    rating,
+    totalReviews,
+    totalTrades,
+    isProfileComplete,
+  );
 }

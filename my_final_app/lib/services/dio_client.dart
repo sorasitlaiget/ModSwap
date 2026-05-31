@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../config/api_config.dart';
 import 'auth_service.dart';
+import '../utils/logger.dart';
 
 /// Dio HTTP client - similar to Axios on the web.
 /// Handles automatic token attachment, logging, and error normalization.
@@ -58,7 +59,7 @@ class DioClient {
           responseHeader: false,
           responseBody: true,
           error: true,
-          logPrint: (obj) => debugPrint('[Dio] $obj'),
+          logPrint: (obj) => AppLogger.d('[Dio] $obj'),
         ),
       );
     }

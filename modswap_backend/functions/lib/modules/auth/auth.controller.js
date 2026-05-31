@@ -54,6 +54,31 @@ class AuthController {
                 next(error);
             }
         };
+        /**
+         * PATCH /auth/password
+         * เปลี่ยน password
+         */
+        this.changePassword = async (req, res, next) => {
+            try {
+                const { uid } = req.user;
+                await this.service.changePassword(uid, req.body);
+                res.json((0, response_util_1.successResponse)({ message: 'Password changed successfully' }));
+            }
+            catch (error) {
+                next(error);
+            }
+        };
+        this.verifyDevice = async (req, res, next) => {
+            try {
+                const { uid } = req.user;
+                const { deviceId } = req.body;
+                const result = await this.service.verifyDevice(uid, deviceId);
+                res.json((0, response_util_1.successResponse)(result));
+            }
+            catch (error) {
+                next(error);
+            }
+        };
     }
 }
 exports.AuthController = AuthController;

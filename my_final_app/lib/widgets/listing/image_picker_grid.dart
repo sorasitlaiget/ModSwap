@@ -1,22 +1,16 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../services/image_service.dart';
 import '../../theme/app_colors.dart';
-import 'package:image_picker/image_picker.dart';
 
-/// Image picker grid — supports both local files (new) and URLs (existing).
-/// Used in Post/Edit Item form. 1-10 images.
+/// Image picker grid — supports both local XFiles (new) and URLs (existing).
+/// Uses XFile + Image.memory() for full web + mobile compatibility.
 class ImagePickerGrid extends StatelessWidget {
-  /// Already-uploaded images (URLs from backend)
   final List<String> existingUrls;
-
-  /// Newly picked files (not yet uploaded)
-  final List<File> newFiles;
-
-  final void Function(List<File>) onFilesChanged;
+  final List<XFile> newFiles;
+  final void Function(List<XFile>) onFilesChanged;
   final void Function(List<String>) onExistingChanged;
-
   final int maxCount;
 
   const ImagePickerGrid({
@@ -32,33 +26,83 @@ class ImagePickerGrid extends StatelessWidget {
 
   Future<void> _addImages(BuildContext context) async {
     if (totalCount >= maxCount) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Maximum $maxCount images')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Maximum $maxCount images')));
       return;
     }
 
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from gallery'),
-              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Take a photo'),
-              onTap: () => Navigator.pop(ctx, ImageSource.camera),
-            ),
-            const SizedBox(height: 8),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textGray.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Add Photo',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.navy,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _PickerOption(
+                      icon: Icons.photo_library_outlined,
+                      label: 'Gallery',
+                      onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _PickerOption(
+                      icon: Icons.camera_alt_outlined,
+                      label: 'Camera',
+                      onTap: () => Navigator.pop(ctx, ImageSource.camera),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                      color: AppColors.textGray.withValues(alpha: 0.4),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: AppColors.textGray, fontSize: 14),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -95,28 +139,29 @@ class ImagePickerGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final slots = <Widget>[];
 
-    // Existing URLs (from backend)
     for (var i = 0; i < existingUrls.length; i++) {
-      slots.add(_imageSlot(
-        child: CachedNetworkImage(
-          imageUrl: existingUrls[i],
-          fit: BoxFit.cover,
-          placeholder: (_, __) => Container(color: AppColors.softGray),
-          errorWidget: (_, __, ___) => const Icon(Icons.broken_image),
+      slots.add(
+        _imageSlot(
+          child: CachedNetworkImage(
+            imageUrl: existingUrls[i],
+            fit: BoxFit.cover,
+            placeholder: (_, _) => Container(color: AppColors.softGray),
+            errorWidget: (_, _, _) => const Icon(Icons.broken_image),
+          ),
+          onRemove: () => _removeExisting(i),
         ),
-        onRemove: () => _removeExisting(i),
-      ));
+      );
     }
 
-    // New files (local)
     for (var i = 0; i < newFiles.length; i++) {
-      slots.add(_imageSlot(
-        child: Image.file(newFiles[i], fit: BoxFit.cover),
-        onRemove: () => _removeFile(i),
-      ));
+      slots.add(
+        _imageSlot(
+          child: _XFileImage(xfile: newFiles[i]),
+          onRemove: () => _removeFile(i),
+        ),
+      );
     }
 
-    // Add button (if not full)
     if (totalCount < maxCount) {
       slots.add(_addSlot(context));
     }
@@ -137,7 +182,9 @@ class ImagePickerGrid extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.textGray.withOpacity(0.3)),
+            border: Border.all(
+              color: AppColors.textGray.withValues(alpha: 0.3),
+            ),
           ),
           clipBehavior: Clip.antiAlias,
           child: child,
@@ -151,7 +198,7 @@ class ImagePickerGrid extends StatelessWidget {
               width: 22,
               height: 22,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
+                color: Colors.black.withValues(alpha: 0.6),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.close, size: 14, color: Colors.white),
@@ -170,7 +217,7 @@ class ImagePickerGrid extends StatelessWidget {
           color: AppColors.softGray,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: AppColors.textGray.withOpacity(0.4),
+            color: AppColors.textGray.withValues(alpha: 0.4),
             width: 1.2,
           ),
         ),
@@ -186,6 +233,87 @@ class ImagePickerGrid extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PickerOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _PickerOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: AppColors.orange.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.orange.withValues(alpha: 0.2),
+            width: 1.2,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: AppColors.orange, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.navy,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Displays an XFile as an image — works on web (memory) and mobile (file).
+class _XFileImage extends StatefulWidget {
+  final XFile xfile;
+  const _XFileImage({required this.xfile});
+
+  @override
+  State<_XFileImage> createState() => _XFileImageState();
+}
+
+class _XFileImageState extends State<_XFileImage> {
+  late final Future<List<int>> _bytesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _bytesFuture = widget.xfile.readAsBytes();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<int>>(
+      future: _bytesFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Container(color: AppColors.softGray);
+        }
+        return Image.memory(
+          snapshot.data! as dynamic,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
+        );
+      },
     );
   }
 }

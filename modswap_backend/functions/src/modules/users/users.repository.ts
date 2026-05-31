@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase-admin/firestore';
+import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { firestore } from '../../config/firebase.config';
 import { COLLECTIONS } from '../../config/constants';
 import { User, CreateUserData, UpdateUserProfileData } from './users.types';
@@ -36,9 +36,36 @@ export class UsersRepository {
     return doc.exists;
   }
 
+  async findByLineId(lineId: string): Promise<User | null> {
+    const snapshot = await this.collection
+      .where('lineId', '==', lineId)
+      .limit(1)
+      .get();
+    if (snapshot.empty) return null;
+    return snapshot.docs[0].data() as User;
+  }
+
+  async findByStudentId(studentId: string, excludeUid?: string): Promise<User | null> {
+    const snapshot = await this.collection
+      .where('studentId', '==', studentId)
+      .limit(1)
+      .get();
+    if (snapshot.empty) return null;
+    const doc = snapshot.docs[0];
+    if (excludeUid && doc.id === excludeUid) return null;
+    return doc.data() as User;
+  }
+
   async update(uid: string, data: UpdateUserProfileData): Promise<void> {
     await this.collection.doc(uid).update({
       ...data,
+      updatedAt: Timestamp.now(),
+    });
+  }
+
+  async incrementTotalTrades(uid: string): Promise<void> {
+    await this.collection.doc(uid).update({
+      totalTrades: FieldValue.increment(1),
       updatedAt: Timestamp.now(),
     });
   }

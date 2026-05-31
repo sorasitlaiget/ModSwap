@@ -14,8 +14,7 @@ extension AppThemeExt on BuildContext {
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
 
   /// App / scaffold background (the page itself).
-  Color get appBg =>
-      isDark ? const Color(0xFF121212) : const Color(0xFFF2F3F7);
+  Color get appBg => isDark ? const Color(0xFF121212) : const Color(0xFFF2F3F7);
 
   /// Card / surface background (white-ish in light, near-black in dark).
   Color get cardBg => isDark ? const Color(0xFF1E1E1E) : Colors.white;

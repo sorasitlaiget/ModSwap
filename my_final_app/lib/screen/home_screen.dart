@@ -10,8 +10,7 @@ import '../widgets/home/home_header.dart';
 import '../widgets/home/welcome_banner.dart';
 import '../widgets/home/home_search_bar.dart';
 import '../widgets/home/category_chips.dart';
-// หมายเหตุ: ถ้าไฟล์ชื่อ listing_card.dart ให้แก้ตรงนี้เป็น listing_card.dart ด้วยนะครับ
-import '../widgets/listing/listing_card_real.dart'; 
+import '../widgets/listing/listing_card_real.dart';
 import 'listing_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -41,17 +40,38 @@ class _HomeScreenState extends State<HomeScreen> {
     _load();
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final listings = await _service.getPublished(
-        category: _selectedCategory == 'all' ? null : _selectedCategory,
-        search: _searchQuery.isEmpty ? null : _searchQuery,
-        type: _filterType, // 🎯 3. ส่งค่า filter type ไปให้ API
-      );
+      final List<Listing> listings;
+
+      if (_searchQuery.isNotEmpty && _searchQuery.length >= 2) {
+        // ⭐ Smart semantic search (Gemini embeddings)
+        // "flower" finds "rose", "ดอกไม้", "bouquet" etc.
+        final results = await _service.search(
+          query: _searchQuery,
+          category: _selectedCategory == 'all' ? null : _selectedCategory,
+          type: _filterType,
+          limit: 30,
+        );
+        listings = results.map((r) => r.listing).toList();
+      } else {
+        // Regular browse (no search)
+        listings = await _service.getPublished(
+          category: _selectedCategory == 'all' ? null : _selectedCategory,
+          type: _filterType,
+        );
+      }
+
       if (!mounted) return;
       setState(() {
         _listings = listings;
@@ -71,18 +91,23 @@ class _HomeScreenState extends State<HomeScreen> {
     _load();
   }
 
+  /// Called when user clears the search field
+  /// (instant — back to browse mode)
   void _onSearchChanged(String q) {
-    // 🎯 4. เปลี่ยนมาใช้ระบบ Debounce หน่วงเวลาครึ่งวิ ไม่ให้แอพค้างตอนพิมพ์
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      setState(() {
-        _searchQuery = q.trim();
-      });
+    final trimmed = q.trim();
+    // Only react to clearing the field — don't search on every keystroke
+    // (saves API quota: 1,000 calls/day limit on Gemini free tier)
+    if (trimmed.isEmpty && _searchQuery.isNotEmpty) {
+      setState(() => _searchQuery = '');
       _load();
-    });
+    }
   }
 
-  void _onSearchSubmitted() {
+  /// Called when user presses Enter — runs the actual search
+  void _onSearchSubmitted(String q) {
+    final trimmed = q.trim();
+    if (trimmed == _searchQuery) return;
+    setState(() => _searchQuery = trimmed);
     _load();
   }
 
@@ -100,39 +125,58 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showFilterBottomSheet() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
+      builder: (ctx) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.textGray.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 const Text(
                   'Filter by Type',
                   style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.navy),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.navy,
+                  ),
                 ),
                 const SizedBox(height: 16),
-                ListTile(
-                  leading: const Icon(Icons.all_inclusive, color: AppColors.orange),
-                  title: const Text('All Items'),
-                  onTap: () => Navigator.pop(context, 'all'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.sell, color: AppColors.orange),
-                  title: const Text('For Sale'),
-                  onTap: () => Navigator.pop(context, 'sell'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.swap_horiz, color: AppColors.orange),
-                  title: const Text('Open to Swap'),
-                  onTap: () => Navigator.pop(context, 'trade'),
+                Row(
+                  children: [
+                    _TypeOption(
+                      icon: Icons.all_inclusive,
+                      label: 'All Items',
+                      value: 'all',
+                      current: _filterType,
+                    ),
+                    const SizedBox(width: 10),
+                    _TypeOption(
+                      icon: Icons.sell_outlined,
+                      label: 'For Sale',
+                      value: 'sell',
+                      current: _filterType,
+                    ),
+                    const SizedBox(width: 10),
+                    _TypeOption(
+                      icon: Icons.swap_horiz,
+                      label: 'Open to Swap',
+                      value: 'trade',
+                      current: _filterType,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -174,16 +218,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               Stack(
-                alignment: Alignment.bottomCenter, // จัดให้กล่องอยู่ตำแหน่งล่างสุดของ Stack เสมอ
+                alignment: Alignment
+                    .bottomCenter, // จัดให้กล่องอยู่ตำแหน่งล่างสุดของ Stack เสมอ
                 children: [
                   // 1. ส่วนแบนเนอร์สีน้ำเงิน และ "พื้นที่ล่องหน" ที่เราเติมเข้าไปเพื่อให้ Stack สูงพอที่จะคลุมกล่อง
                   Column(
                     children: [
                       WelcomeBanner(userName: userName),
-                      const SizedBox(height: 55), // 🎯 พื้นที่ล่องหน! ทำให้กล่องด้านล่างไม่ล้นกรอบและ "กดได้"
+                      const SizedBox(
+                        height: 55,
+                      ), // 🎯 พื้นที่ล่องหน! ทำให้กล่องด้านล่างไม่ล้นกรอบและ "กดได้"
                     ],
                   ),
-                  
+
                   // 2. กล่อง Search และ Category (เปลี่ยนมาใช้ Padding ธรรมดาแทน)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -194,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -204,6 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           HomeSearchBar(
                             onChanged: _onSearchChanged,
+                            onSubmitted: _onSearchSubmitted,
                             onFilterTap: _showFilterBottomSheet,
                           ),
                           const SizedBox(height: 12),
@@ -217,12 +265,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 15), // 🎯 8. ขยับระยะห่างตรงนี้เพิ่ม (จาก 56 เป็น 70) เพื่อหลบกล่องที่ขยับลงมา
+              const SizedBox(
+                height: 15,
+              ), // 🎯 8. ขยับระยะห่างตรงนี้เพิ่ม (จาก 56 เป็น 70) เพื่อหลบกล่องที่ขยับลงมา
 
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),
                 child: Text(
-                  'Campus Pick: New This Week',
+                  _searchQuery.isEmpty
+                      ? 'Campus Pick: New This Week'
+                      : 'Search results for "$_searchQuery"',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
@@ -304,6 +356,64 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (_, i) => ListingCard(
           listing: _listings[i],
           onTap: () => _openDetail(_listings[i]),
+        ),
+      ),
+    );
+  }
+}
+
+class _TypeOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final String? current;
+
+  const _TypeOption({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.current,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = (current == null && value == 'all') || current == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => Navigator.pop(context, value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.orange.withValues(alpha: 0.1)
+                : AppColors.softGray,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected ? AppColors.orange : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? AppColors.orange : AppColors.navy,
+                size: 26,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? AppColors.orange : AppColors.navy,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

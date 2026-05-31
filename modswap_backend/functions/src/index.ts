@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { onRequest } from 'firebase-functions/v2/https';
@@ -10,6 +11,7 @@ import { createAuthRouter } from './modules/auth/auth.routes';
 import listingsRoutes from './modules/listings/listings.routes';
 import { errorHandlerMiddleware } from './middleware/error-handler.middleware';
 import wishlistRoutes from './modules/wishlist/wishlist.routes';
+import { createRatingsRouter } from './modules/ratings/ratings.routes';
 
 // Re-export triggers
 export { onUserCreate } from './triggers/auth/on-user-create.trigger';
@@ -31,6 +33,7 @@ app.get('/health', (_, res) => {
 app.use('/auth', createAuthRouter());
 app.use('/listings', listingsRoutes);
 app.use('/wishlist', wishlistRoutes);
+app.use('/ratings', createRatingsRouter());
 
 // Error handler (must be last)
 app.use(errorHandlerMiddleware);

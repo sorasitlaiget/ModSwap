@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../utils/logger.dart';
 import '../theme/app_colors.dart';
 import 'login_screen.dart';
 import 'verify_email_screen.dart';
@@ -16,12 +16,14 @@ class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.read<AuthState>();
-    debugPrint('[AuthGate] Build with auth instance: ${auth.hashCode}');
+    AppLogger.d('[AuthGate] Build with auth instance: ${auth.hashCode}');
 
     return ListenableBuilder(
       listenable: auth,
       builder: (context, _) {
-        debugPrint('[AuthGate] ListenableBuilder rebuilt, status: ${auth.status}');
+        AppLogger.d(
+          '[AuthGate] ListenableBuilder rebuilt, status: ${auth.status}',
+        );
 
         switch (auth.status) {
           case AuthStatus.initializing:
@@ -47,9 +49,7 @@ class _SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: CircularProgressIndicator(color: AppColors.orange),
-      ),
+      body: Center(child: CircularProgressIndicator(color: AppColors.orange)),
     );
   }
 }

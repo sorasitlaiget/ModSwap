@@ -1,16 +1,25 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:firebase_crashlytics/firebase_crashlytics.dart'; // uncomment เมื่อ test บน release build
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/notification_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/listings_service.dart';
+import '../services/rating_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme_ext.dart';
 import '../widgets/bottom_nav/mod_swap_bottom_nav.dart';
 import '../widgets/home/home_header.dart';
+import '../widgets/rating/rating_sheet.dart';
 import 'home_screen.dart';
 import 'my_items_screen.dart';
+import 'notification_screen.dart';
 import 'post_item_screen.dart';
 import 'wishlist_screen.dart';
+import 'change_password_screen.dart';
 import 'edit_profile_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -22,6 +31,99 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
+  final _ratingService = RatingService();
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _ratingSubscription;
+  bool _showingRatingPopup = false;
+  QuerySnapshot<Map<String, dynamic>>? _latestRatingSnapshot;
+  // Listings already shown this session — prevents re-showing if duplicate doc
+  // hasn't been deleted from Firestore yet when the next snapshot fires.
+  final _handledListingIds = <String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _listenPendingRatings();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null && mounted) {
+        context.read<NotificationProvider>().init(uid);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ratingSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _listenPendingRatings() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    _ratingSubscription = _ratingService.pendingRatingsStream(uid).listen((
+      snapshot,
+    ) {
+      _latestRatingSnapshot = snapshot;
+      if (!_showingRatingPopup) _maybeShowRating();
+    });
+  }
+
+  void _maybeShowRating() {
+    final snapshot = _latestRatingSnapshot;
+    if (snapshot == null || snapshot.docs.isEmpty || _showingRatingPopup) {
+      return;
+    }
+
+    // Deduplicate by listingId — keep the first doc per listing,
+    // delete any extras left over from old-format documents.
+    final seenListingIds = <String>{};
+    QueryDocumentSnapshot<Map<String, dynamic>>? docToShow;
+
+    for (final doc in snapshot.docs) {
+      final listingId = (doc.data()['listingId'] as String?) ?? doc.id;
+      if (_handledListingIds.contains(listingId) ||
+          seenListingIds.contains(listingId)) {
+        _ratingService.skipRating(
+          doc.id,
+        ); // silently delete handled or duplicate
+      } else {
+        seenListingIds.add(listingId);
+        docToShow ??= doc;
+      }
+    }
+
+    if (docToShow == null) return;
+
+    final listingIdToShow =
+        (docToShow.data()['listingId'] as String?) ?? docToShow.id;
+    _handledListingIds.add(
+      listingIdToShow,
+    ); // mark before showing — prevents re-show if doc lingers
+    final data = docToShow.data();
+    _showingRatingPopup = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        _showingRatingPopup = false;
+        return;
+      }
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: false,
+        enableDrag: false,
+        backgroundColor: Colors.transparent,
+        builder: (_) => RatingSheet(
+          pendingRatingId: docToShow!.id,
+          sellerName: data['sellerName'] as String? ?? '',
+          listingTitle: data['listingTitle'] as String? ?? '',
+        ),
+      ).then((_) {
+        _showingRatingPopup = false;
+      });
+    });
+  }
 
   Future<void> _onTap(int index) async {
     if (index == 2) {
@@ -62,7 +164,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       bottomNavigationBar: ModSwapBottomNav(
         currentIndex: _currentIndex,
-        notificationCount: 0,
+        notificationCount: context.watch<NotificationProvider>().unreadCount,
         onTap: _onTap,
       ),
     );
@@ -73,7 +175,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       return const HomeScreen(key: ValueKey('home'));
     }
     if (index == 1) {
-      return MyItemsScreen(key: ValueKey('my_items_${DateTime.now().millisecondsSinceEpoch}'));
+      return MyItemsScreen(
+        key: ValueKey('my_items_${DateTime.now().millisecondsSinceEpoch}'),
+      );
+    }
+    if (index == 3) {
+      // ← เพิ่ม block นี้
+      return const NotificationScreen(key: ValueKey('notification'));
     }
     if (index == 4) {
       return const _MenuPage(key: ValueKey('menu'));
@@ -151,31 +259,90 @@ class _MenuPageState extends State<_MenuPage> {
   Future<void> _logout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.orange.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: AppColors.orange,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Logout',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.navy,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Are you sure you want to logout?',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textGray, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        side: const BorderSide(color: Color(0xFFE5E7EB)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: AppColors.textGray,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.orange,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: const Text(
+                        'Logout',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        title: const Text('Logout?'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.textGray),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.logoutRed,
-            ),
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
       ),
     );
 
@@ -242,7 +409,7 @@ class _MenuPageState extends State<_MenuPage> {
                       Expanded(
                         child: _StatCard(
                           value: '${profile.totalTrades}',
-                          label: 'Swaps',
+                          label: 'Deals',
                         ),
                       ),
                     ],
@@ -267,21 +434,6 @@ class _MenuPageState extends State<_MenuPage> {
                     child: Column(
                       children: [
                         _MenuRow(
-                          icon: Icons.inventory_2_outlined,
-                          label: 'My Item',
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const MyItemsScreen(initialTabIndex: 1),
-                              ),
-                            );
-                            _loadItemsCount();
-                          },
-                        ),
-                        const _RowDivider(),
-                        _MenuRow(
                           icon: Icons.favorite_border,
                           label: 'Wishlist',
                           onTap: () {
@@ -294,17 +446,31 @@ class _MenuPageState extends State<_MenuPage> {
                           },
                         ),
                         const _RowDivider(),
+                        _MenuRow(
+                          icon: Icons.lock_outline,
+                          label: 'Change Password',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ChangePasswordScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const _RowDivider(),
                         // Dark Mode toggle — uses ThemeProvider to switch themes app-wide.
                         Consumer<ThemeProvider>(
                           builder: (context, themeProvider, _) {
                             return _MenuRow(
                               icon: Icons.dark_mode_outlined,
                               label: 'Dark Mode',
-                              onTap: () => themeProvider.toggle(!themeProvider.isDark),
+                              onTap: () =>
+                                  themeProvider.toggle(!themeProvider.isDark),
                               trailing: Switch(
                                 value: themeProvider.isDark,
                                 onChanged: themeProvider.toggle,
-                                activeColor: Colors.white,
+                                activeThumbColor: Colors.white,
                                 activeTrackColor: AppColors.orange,
                                 inactiveThumbColor: Colors.white,
                                 inactiveTrackColor: const Color(0xFFD1D5DB),
@@ -346,6 +512,20 @@ class _MenuPageState extends State<_MenuPage> {
                       ),
                     ),
                   ),
+
+                  // if (kDebugMode) ...[
+                  //   const SizedBox(height: 16),
+                  //   Center(
+                  //     child: TextButton.icon(
+                  //       onPressed: () => FirebaseCrashlytics.instance.crash(),
+                  //       icon: const Icon(Icons.bug_report, color: Colors.red),
+                  //       label: const Text(
+                  //         'Test Crash (Debug)',
+                  //         style: TextStyle(color: Colors.red),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ],
                 ],
               ),
             ),
@@ -403,10 +583,7 @@ class _ProfileSummaryCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   email,
-                  style: TextStyle(
-                    color: context.secondaryText,
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(color: context.secondaryText, fontSize: 11),
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (studentId != null && studentId!.isNotEmpty)
@@ -524,12 +701,9 @@ class _MenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tail = trailing ??
-        const Icon(
-          Icons.chevron_right,
-          color: AppColors.textGray,
-          size: 22,
-        );
+    final tail =
+        trailing ??
+        const Icon(Icons.chevron_right, color: AppColors.textGray, size: 22);
 
     return InkWell(
       onTap: onTap,

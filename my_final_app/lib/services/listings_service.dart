@@ -8,7 +8,7 @@ class ListingsService {
   final DioClient _dioClient;
 
   ListingsService({DioClient? dioClient})
-      : _dioClient = dioClient ?? DioClient(AuthService());
+    : _dioClient = dioClient ?? DioClient(AuthService());
 
   Dio get _dio => _dioClient.dio;
 
@@ -178,10 +178,27 @@ class ListingsService {
     }
   }
 
-  Future<Listing> markSold(String id) async {
+  Future<void> markSold(
+    String id, {
+    required String dealType,
+    required String buyerLineId,
+    required String dateCompleted,
+    double? finalPrice,
+    String? whatIGotReturn,
+    String? swapItemPhotoURL,
+  }) async {
     try {
-      final res = await _dio.post('/listings/$id/sold');
-      return Listing.fromJson(res.data['data'] as Map<String, dynamic>);
+      await _dio.post(
+        '/listings/$id/sold',
+        data: {
+          'dealType': dealType,
+          'buyerLineId': buyerLineId,
+          'dateCompleted': dateCompleted,
+          if (finalPrice != null) 'finalPrice': finalPrice,
+          if (whatIGotReturn != null) 'whatIGotReturn': whatIGotReturn,
+          if (swapItemPhotoURL != null) 'swapItemPhotoURL': swapItemPhotoURL,
+        },
+      );
     } on DioException catch (e) {
       throw _parseError(e);
     }
@@ -190,6 +207,39 @@ class ListingsService {
   Future<void> delete(String id) async {
     try {
       await _dio.delete('/listings/$id');
+    } on DioException catch (e) {
+      throw _parseError(e);
+    }
+  }
+
+  // ============================================================
+  // ⭐ Smart Semantic Search (Gemini embeddings on backend)
+  // ============================================================
+
+  /// Smart search using Gemini embeddings + cosine similarity.
+  /// "flower" finds "rose", "ดอกไม้", "bouquet" etc.
+  ///
+  /// Returns list sorted by relevance (highest score first).
+  Future<List<SearchResult>> search({
+    required String query,
+    String? category,
+    String? type,
+    int limit = 20,
+  }) async {
+    try {
+      final res = await _dio.post(
+        '/listings/search',
+        data: {
+          'query': query,
+          if (category != null) 'category': category,
+          if (type != null) 'type': type,
+          'limit': limit,
+        },
+      );
+      final data = res.data['data'] as List<dynamic>;
+      return data
+          .map((j) => SearchResult.fromJson(j as Map<String, dynamic>))
+          .toList();
     } on DioException catch (e) {
       throw _parseError(e);
     }

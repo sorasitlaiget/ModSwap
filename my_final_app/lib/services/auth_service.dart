@@ -31,10 +31,7 @@ class AuthService {
   }
 
   /// Sign in with email and password
-  Future<User> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<User> login({required String email, required String password}) async {
     final credential = await _auth.signInWithEmailAndPassword(
       email: email,
       password: password,

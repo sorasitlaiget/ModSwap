@@ -11,5 +11,5 @@ class AppConstants {
 
   // Validation
   static const int passwordMinLength = 8;
-  static const int studentIdLength = 11; 
+  static const int studentIdLength = 11;
 }

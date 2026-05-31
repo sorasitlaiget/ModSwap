@@ -50,10 +50,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
         elevation: 0,
         title: const Text(
           'Wishlist',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -81,8 +78,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
             color: AppColors.orange,
             child: GridView.builder(
               padding: const EdgeInsets.all(12),
-              gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
@@ -143,8 +139,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline,
-                size: 60, color: AppColors.orange),
+            const Icon(Icons.error_outline, size: 60, color: AppColors.orange),
             const SizedBox(height: 12),
             Text(
               message,

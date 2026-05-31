@@ -10,7 +10,7 @@ class WishlistService {
   /// Default constructor — uses DioClient with AuthService
   /// Same pattern as ListingsService.
   WishlistService({DioClient? dioClient})
-      : _dioClient = dioClient ?? DioClient(AuthService());
+    : _dioClient = dioClient ?? DioClient(AuthService());
 
   Dio get _dio => _dioClient.dio;
 
