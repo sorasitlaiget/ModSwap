@@ -263,7 +263,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             icon: Icons.lock_outline,
                           ).copyWith(
                             suffixIcon: IconButton(
-                              tooltip: _isPasswordObscured ? 'Show password' : 'Hide password',
+                              tooltip: _isPasswordObscured
+                                  ? 'Show password'
+                                  : 'Hide password',
                               icon: Icon(
                                 _isPasswordObscured
                                     ? Icons.visibility_off_outlined
@@ -318,7 +320,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             icon: Icons.lock_outline,
                           ).copyWith(
                             suffixIcon: IconButton(
-                              tooltip: _isConfirmPasswordObscured ? 'Show confirm password' : 'Hide confirm password',
+                              tooltip: _isConfirmPasswordObscured
+                                  ? 'Show confirm password'
+                                  : 'Hide confirm password',
                               icon: Icon(
                                 _isConfirmPasswordObscured
                                     ? Icons.visibility_off_outlined

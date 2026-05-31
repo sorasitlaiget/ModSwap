@@ -206,7 +206,11 @@ class _MyItemsScreenState extends State<MyItemsScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 80, color: AppColors.textGray.withValues(alpha: 0.4)),
+          Icon(
+            icon,
+            size: 80,
+            color: AppColors.textGray.withValues(alpha: 0.4),
+          ),
           const SizedBox(height: 16),
           Text(
             title,

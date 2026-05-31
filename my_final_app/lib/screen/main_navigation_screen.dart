@@ -274,12 +274,20 @@ class _MenuPageState extends State<_MenuPage> {
                   color: AppColors.orange.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.logout_rounded, color: AppColors.orange, size: 26),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: AppColors.orange,
+                  size: 26,
+                ),
               ),
               const SizedBox(height: 16),
               const Text(
                 'Logout',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.navy),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.navy,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -302,7 +310,10 @@ class _MenuPageState extends State<_MenuPage> {
                       ),
                       child: const Text(
                         'Cancel',
-                        style: TextStyle(color: AppColors.textGray, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: AppColors.textGray,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -320,7 +331,10 @@ class _MenuPageState extends State<_MenuPage> {
                       ),
                       child: const Text(
                         'Logout',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),

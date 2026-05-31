@@ -87,7 +87,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 2),
-          Image.asset(AppConstants.logoFont, width: 300, fit: BoxFit.contain, semanticLabel: 'ModSwap'),
+          Image.asset(
+            AppConstants.logoFont,
+            width: 300,
+            fit: BoxFit.contain,
+            semanticLabel: 'ModSwap',
+          ),
           const SizedBox(height: 2),
 
           // Lock icon
@@ -205,7 +210,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 2),
-        Image.asset(AppConstants.logoFont, width: 300, fit: BoxFit.contain, semanticLabel: 'ModSwap'),
+        Image.asset(
+          AppConstants.logoFont,
+          width: 300,
+          fit: BoxFit.contain,
+          semanticLabel: 'ModSwap',
+        ),
         const SizedBox(height: 2),
 
         // Success icon

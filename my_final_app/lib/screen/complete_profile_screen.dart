@@ -60,7 +60,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       final msg = e.toString();
-      if (msg.contains('STUDENT_ID_CONFLICT') || msg.contains('Student ID is already in use')) {
+      if (msg.contains('STUDENT_ID_CONFLICT') ||
+          msg.contains('Student ID is already in use')) {
         setState(() => _studentIdError = 'Student ID is already in use');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -156,7 +157,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         }
                       },
                       decoration: _inputDecoration(
-                        hint: "${AppConstants.studentIdLength}-digit student ID",
+                        hint:
+                            "${AppConstants.studentIdLength}-digit student ID",
                         icon: Icons.badge_outlined,
                         hasError: _studentIdError != null,
                       ).copyWith(counterText: ''),
@@ -180,7 +182,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         padding: const EdgeInsets.only(left: 16),
                         child: Text(
                           _studentIdError!,
-                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -264,7 +269,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
   }
 
-  InputDecoration _inputDecoration({required String hint, IconData? icon, bool hasError = false}) {
+  InputDecoration _inputDecoration({
+    required String hint,
+    IconData? icon,
+    bool hasError = false,
+  }) {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: AppColors.textGray, fontSize: 14),

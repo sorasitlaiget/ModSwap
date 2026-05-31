@@ -198,7 +198,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             hasError: _loginError != null,
                           ).copyWith(
                             suffixIcon: IconButton(
-                              tooltip: _isObscured ? 'Show password' : 'Hide password',
+                              tooltip: _isObscured
+                                  ? 'Show password'
+                                  : 'Hide password',
                               icon: Icon(
                                 _isObscured
                                     ? Icons.visibility_off_outlined
@@ -331,10 +333,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           onPressed: _loading ? null : _handleBiometricLogin,
-                          icon: const Icon(Icons.fingerprint, color: AppColors.navy),
+                          icon: const Icon(
+                            Icons.fingerprint,
+                            color: AppColors.navy,
+                          ),
                           label: const Text(
                             'Sign in with Biometrics',
-                            style: TextStyle(color: AppColors.navy, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: AppColors.navy,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),

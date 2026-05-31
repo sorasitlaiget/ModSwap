@@ -97,7 +97,9 @@ class AuthState extends ChangeNotifier {
       }
 
       _firebaseUser = refreshed;
-      AppLogger.d('[AuthState] After reload: emailVerified=${refreshed.emailVerified}');
+      AppLogger.d(
+        '[AuthState] After reload: emailVerified=${refreshed.emailVerified}',
+      );
 
       if (!refreshed.emailVerified) {
         AppLogger.d('[AuthState] Setting status to emailUnverified');
@@ -116,7 +118,9 @@ class AuthState extends ChangeNotifier {
   Future<void> _fetchProfile() async {
     try {
       _profile = await _apiService.getMyProfile();
-      AppLogger.d('[AuthState] Profile loaded, isComplete=${_profile!.isProfileComplete}');
+      AppLogger.d(
+        '[AuthState] Profile loaded, isComplete=${_profile!.isProfileComplete}',
+      );
 
       if (_profile!.isProfileComplete) {
         _setStatus(AuthStatus.authenticated);
@@ -156,7 +160,9 @@ class AuthState extends ChangeNotifier {
             final updated = _profile!.mergeFromFirestore(data);
             if (updated == _profile) return; // no change
             _profile = updated;
-            AppLogger.d('[AuthState] Profile stats updated: rating=${updated.rating}, reviews=${updated.totalReviews}, trades=${updated.totalTrades}');
+            AppLogger.d(
+              '[AuthState] Profile stats updated: rating=${updated.rating}, reviews=${updated.totalReviews}, trades=${updated.totalTrades}',
+            );
             notifyListeners();
           },
           onError: (err) {
@@ -201,7 +207,9 @@ class AuthState extends ChangeNotifier {
     try {
       AppLogger.d('[AuthState] login() called for $email');
       await _authService.login(email: email, password: password);
-      AppLogger.d('[AuthState] login() succeeded — waiting for authStateChanges to fire');
+      AppLogger.d(
+        '[AuthState] login() succeeded — waiting for authStateChanges to fire',
+      );
       // Fire-and-forget: check if this is a new device
       _verifyDeviceInBackground();
     } catch (e) {

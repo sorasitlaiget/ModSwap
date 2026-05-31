@@ -159,7 +159,9 @@ class _RatingScreenState extends State<RatingScreen> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Icon(
-                            starIndex <= _rating ? Icons.star : Icons.star_border,
+                            starIndex <= _rating
+                                ? Icons.star
+                                : Icons.star_border,
                             size: 44,
                             color: _ratingColor(starIndex),
                           ),
