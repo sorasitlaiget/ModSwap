@@ -1,0 +1,17 @@
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Node / Functions
+modswap_backend/functions/node_modules/
+modswap_backend/functions/lib/
+
+# macOS
+.DS_Store
