@@ -1,21 +1,22 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/constants.dart';
 import '../models/notification_model.dart';
-import '../providers/auth_provider.dart';
+import '../providers/auth_notifier.dart';
 import '../services/notification_service.dart';
 import '../theme/app_colors.dart';
 
-class CompleteProfileScreen extends StatefulWidget {
+class CompleteProfileScreen extends ConsumerStatefulWidget {
   const CompleteProfileScreen({super.key});
 
   @override
-  State<CompleteProfileScreen> createState() => _CompleteProfileScreenState();
+  ConsumerState<CompleteProfileScreen> createState() =>
+      _CompleteProfileScreenState();
 }
 
-class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
+class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _displayNameCtrl = TextEditingController();
   final _studentIdCtrl = TextEditingController();
@@ -39,12 +40,23 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
     setState(() => _loading = true);
     try {
-      await context.read<AuthState>().completeProfile(
-        displayName: _displayNameCtrl.text.trim(),
-        studentId: _studentIdCtrl.text.trim(),
-        faculty: _facultyCtrl.text.trim(),
-        lineId: _lineIdCtrl.text.trim(),
-      );
+      final notifier = ref.read(authNotifierProvider.notifier);
+      try {
+        await notifier.completeProfile(
+          displayName: _displayNameCtrl.text.trim(),
+          studentId: _studentIdCtrl.text.trim(),
+          faculty: _facultyCtrl.text.trim(),
+          lineId: _lineIdCtrl.text.trim(),
+        );
+      } catch (e) {
+        final msg = e.toString();
+        if (msg.contains('already completed') ||
+            msg.contains('Profile already')) {
+          await notifier.refreshProfile();
+          return;
+        }
+        rethrow;
+      }
       // Fire-and-forget: send welcome notification
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) {

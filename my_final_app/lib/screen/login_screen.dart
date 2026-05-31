@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/constants.dart';
-import '../providers/auth_provider.dart';
+import '../providers/auth_notifier.dart';
 import '../services/auth_service.dart';
 import '../services/biometric_service.dart';
 import '../theme/app_colors.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
@@ -59,11 +59,12 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final email = _emailCtrl.text.trim();
       final password = _passwordCtrl.text;
-      final auth = context.read<AuthState>();
       if (_rememberMe && _biometricAvailable) {
         await BiometricService.instance.saveCredentials(email, password);
       }
-      await auth.login(email: email, password: password);
+      await ref
+          .read(authNotifierProvider.notifier)
+          .login(email: email, password: password);
       return;
     } catch (e) {
       if (!mounted) return;
@@ -83,10 +84,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _loading = true);
     try {
-      await context.read<AuthState>().login(
-        email: creds.email,
-        password: creds.password,
-      );
+      await ref
+          .read(authNotifierProvider.notifier)
+          .login(email: creds.email, password: creds.password);
     } catch (e) {
       if (!mounted) return;
       setState(() {

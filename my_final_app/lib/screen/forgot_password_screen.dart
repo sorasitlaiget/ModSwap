@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/constants.dart';
-import '../providers/auth_provider.dart';
+import '../providers/auth_notifier.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 
 /// Forgot Password Screen — sends a password reset link via email
-class ForgotPasswordScreen extends StatefulWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
 
@@ -31,8 +32,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     setState(() => _loading = true);
     try {
-      final auth = context.read<AuthState>();
-      await auth.sendPasswordResetEmail(_emailCtrl.text.trim());
+      await ref
+          .read(authNotifierProvider.notifier)
+          .sendPasswordResetEmail(_emailCtrl.text.trim());
 
       if (!mounted) return;
       setState(() => _emailSent = true);

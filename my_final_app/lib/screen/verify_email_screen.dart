@@ -1,23 +1,23 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/constants.dart';
 import '../models/notification_model.dart';
-import '../providers/auth_provider.dart';
+import '../providers/auth_notifier.dart';
 import '../services/notification_service.dart';
 import '../theme/app_colors.dart';
 
 /// Shown when user is logged in but email hasn't been verified yet.
 /// Auto-checks every 3 seconds in case user clicks the link in another tab.
-class VerifyEmailScreen extends StatefulWidget {
+class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({super.key});
 
   @override
-  State<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
+  ConsumerState<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
 }
 
-class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
+class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   Timer? _checkTimer;
   bool _resending = false;
   bool _checkingNow = false;
@@ -47,8 +47,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     if (!silent) setState(() => _checkingNow = true);
 
     try {
-      final auth = context.read<AuthState>();
-      final verified = await auth.checkEmailVerified();
+      final verified = await ref
+          .read(authNotifierProvider.notifier)
+          .checkEmailVerified();
 
       if (verified && !_verifiedNotifSent) {
         _verifiedNotifSent = true;
@@ -82,7 +83,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   Future<void> _resendEmail() async {
     setState(() => _resending = true);
     try {
-      await context.read<AuthState>().resendVerificationEmail();
+      await ref.read(authNotifierProvider.notifier).resendVerificationEmail();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -106,12 +107,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   }
 
   Future<void> _useDifferentAccount() async {
-    await context.read<AuthState>().logout();
+    await ref.read(authNotifierProvider.notifier).logout();
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<AuthState>().firebaseUser;
+    final user = ref.watch(authNotifierProvider).firebaseUser;
     final email = user?.email ?? '';
 
     return Scaffold(

@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/notification_model.dart';
-import '../providers/notification_provider.dart';
+import '../providers/notification_notifier.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme_ext.dart';
 
-class NotificationScreen extends StatefulWidget {
+class NotificationScreen extends ConsumerStatefulWidget {
   const NotificationScreen({super.key});
 
   @override
-  State<NotificationScreen> createState() => _NotificationScreenState();
+  ConsumerState<NotificationScreen> createState() => _NotificationScreenState();
 }
 
-class _NotificationScreenState extends State<NotificationScreen> {
+class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   NotificationCategory? _selectedCategory;
 
   List<AppNotification> _filtered(List<AppNotification> all) {
@@ -49,8 +49,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<NotificationProvider>();
-    final filtered = _filtered(provider.notifications);
+    final notifications = ref.watch(notificationNotifierProvider);
+    final notifier = ref.read(notificationNotifierProvider.notifier);
+    final unreadCount = notifications.where((n) => !n.isRead).length;
+    final filtered = _filtered(notifications);
     final grouped = _groupByDate(filtered);
 
     return Scaffold(
@@ -58,7 +60,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(context, provider),
+            _buildHeader(context, unreadCount, notifier),
             _buildTabs(),
             const SizedBox(height: 8),
             Expanded(
@@ -72,7 +74,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 ),
                 child: filtered.isEmpty
                     ? _emptyState(context)
-                    : _buildList(grouped, provider),
+                    : _buildList(grouped, notifier),
               ),
             ),
           ],
@@ -81,7 +83,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, NotificationProvider provider) {
+  Widget _buildHeader(
+    BuildContext context,
+    int unreadCount,
+    NotificationNotifier notifier,
+  ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
       child: Row(
@@ -96,9 +102,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
               ),
             ),
           ),
-          if (provider.unreadCount > 0)
+          if (unreadCount > 0)
             TextButton(
-              onPressed: provider.markAllRead,
+              onPressed: notifier.markAllRead,
               child: const Text(
                 'Mark all read',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
@@ -162,7 +168,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   Widget _buildList(
     Map<String, List<AppNotification>> grouped,
-    NotificationProvider provider,
+    NotificationNotifier notifier,
   ) {
     // Flatten into a list of (header | notification) items for lazy rendering
     final items = <Object>[];
@@ -193,8 +199,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
         final n = item as AppNotification;
         return _NotificationCard(
           notification: n,
-          onTap: () => provider.markRead(n.id),
-          onDelete: () => provider.delete(n.id),
+          onTap: () => notifier.markRead(n.id),
+          onDelete: () => notifier.delete(n.id),
         );
       },
     );
