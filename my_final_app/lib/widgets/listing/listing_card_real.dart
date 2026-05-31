@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../../models/listing.dart';
+import '../../domain/entities/listing.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme_ext.dart';
 

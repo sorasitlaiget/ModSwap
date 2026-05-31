@@ -8,7 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 import 'config/api_config.dart';
-import 'providers/theme_notifier.dart';
+import 'presentation/providers/theme_notifier.dart';
 import 'router/app_router.dart';
 import 'services/remote_config_service.dart';
 import 'theme/app_colors.dart';

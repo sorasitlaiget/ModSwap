@@ -6,16 +6,15 @@ part of 'app_router.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$appRouterHash() => r'409d0e39e45d15c8a15f81db575ed9882a5adcdc';
+String _$appRouterHash() => r'45dd0635bf1832b70de7e0a279b50862f1477446';
 
 /// See also [appRouter].
 @ProviderFor(appRouter)
 final appRouterProvider = Provider<GoRouter>.internal(
   appRouter,
   name: r'appRouterProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$appRouterHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$appRouterHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

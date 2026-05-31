@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/listing.dart';
+import '../../domain/entities/listing.dart';
 import '../../theme/app_colors.dart';
 
 /// Picker for KMUTT meeting points (pre-defined list)
