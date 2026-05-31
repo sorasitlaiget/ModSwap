@@ -338,7 +338,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: AppColors.navy,
                           ),
                           label: const Text(
-                            'Sign in with Biometrics',
+                            'Login with Biometrics',
                             style: TextStyle(
                               color: AppColors.navy,
                               fontWeight: FontWeight.w600,

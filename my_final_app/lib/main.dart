@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -20,6 +21,8 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   if (!kIsWeb) {
+    await FirebaseCrashlytics.instance
+        .setCrashlyticsCollectionEnabled(!kDebugMode);
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
     PlatformDispatcher.instance.onError = (error, stack) {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
@@ -43,7 +46,14 @@ void main() async {
 
   AppLogger.d('[main] Starting ModSwap');
 
-  runApp(const ProviderScope(child: ModSwapApp()));
+  runZonedGuarded(
+    () => runApp(const ProviderScope(child: ModSwapApp())),
+    (error, stack) {
+      if (!kIsWeb) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      }
+    },
+  );
 }
 
 class ModSwapApp extends ConsumerWidget {

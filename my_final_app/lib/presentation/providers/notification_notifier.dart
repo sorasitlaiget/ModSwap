@@ -25,27 +25,40 @@ class NotificationNotifier extends _$NotificationNotifier {
     _markRead = ref.read(markReadUseCaseProvider);
     _markAllRead = ref.read(markAllReadUseCaseProvider);
 
-    ref.onDispose(() => _sub?.cancel());
+    ref.onDispose(() {
+      _sub?.cancel();
+      _sub = null;
+    });
 
-    final authData = ref.watch(authNotifierProvider);
-    final uid = authData.status == AuthStatus.authenticated
-        ? authData.uid
-        : null;
+    // Use ref.listen (not ref.watch) so profile updates don't re-run build()
+    // and reset state to [].
+    ref.listen<AuthStateData>(
+      authNotifierProvider,
+      (_, next) {
+        final uid =
+            next.status == AuthStatus.authenticated ? next.uid : null;
+        _handleUidChange(uid);
+      },
+      fireImmediately: true,
+    );
 
+    return [];
+  }
+
+  void _handleUidChange(String? uid) {
     if (uid == null) {
       _sub?.cancel();
       _sub = null;
       _currentUid = null;
-      return [];
+      state = [];
+      return;
     }
-
     if (uid != _currentUid) {
       _currentUid = uid;
       _sub?.cancel();
       _sub = _watch(uid).listen((list) => state = list);
     }
-
-    return [];
+    // Same uid: subscription already running, state preserved.
   }
 
   int get unreadCount => state.where((n) => !n.isRead).length;
