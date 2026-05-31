@@ -5,7 +5,6 @@ import '../theme/app_colors.dart';
 import '../theme/app_theme_ext.dart';
 import '../widgets/listing/listing_card_real.dart';
 import 'listing_detail_screen.dart';
-import 'post_item_screen.dart';
 
 /// My Items screen — 3 tabs (Drafts / Published / Sold).
 /// Pass [initialTabIndex] to open a specific tab (0=Drafts, 1=Published, 2=Sold).
@@ -203,31 +202,26 @@ class _MyItemsScreenState extends State<MyItemsScreen>
         icon = Icons.inbox_outlined;
     }
 
-    return RefreshIndicator(
-      onRefresh: _refreshAll,
-      color: AppColors.orange,
-      child: ListView(
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-          Icon(icon, size: 80, color: AppColors.textGray.withOpacity(0.4)),
+          Icon(
+            icon,
+            size: 80,
+            color: AppColors.textGray.withValues(alpha: 0.4),
+          ),
           const SizedBox(height: 16),
-          Center(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.navy,
-              ),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.navy,
             ),
           ),
           const SizedBox(height: 6),
-          Center(
-            child: Text(
-              subtitle,
-              style: const TextStyle(color: AppColors.textGray),
-            ),
-          ),
+          Text(subtitle, style: const TextStyle(color: AppColors.textGray)),
         ],
       ),
     );

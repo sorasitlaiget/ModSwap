@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/constants.dart';
+import '../models/notification_model.dart';
 import '../providers/auth_provider.dart';
+import '../services/notification_service.dart';
 import '../theme/app_colors.dart';
 
 /// Shown when user is logged in but email hasn't been verified yet.
@@ -18,6 +21,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   Timer? _checkTimer;
   bool _resending = false;
   bool _checkingNow = false;
+  bool _verifiedNotifSent = false;
 
   @override
   void initState() {
@@ -45,6 +49,21 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     try {
       final auth = context.read<AuthState>();
       final verified = await auth.checkEmailVerified();
+
+      if (verified && !_verifiedNotifSent) {
+        _verifiedNotifSent = true;
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid != null) {
+          NotificationService()
+              .send(
+                recipientUid: uid,
+                type: NotificationType.emailVerified,
+                title: 'Email Verified',
+                body: 'Your @mail.kmutt.ac.th account is now verified',
+              )
+              .catchError((_) {});
+        }
+      }
 
       if (!silent && !verified && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -107,12 +126,13 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 AppConstants.logoFont,
                 width: 300,
                 fit: BoxFit.contain,
+                semanticLabel: 'ModSwap',
               ),
               const SizedBox(height: 2),
               Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: AppColors.orange.withOpacity(0.1),
+                  color: AppColors.orange.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -154,19 +174,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 ),
                 child: const Row(
                   children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: AppColors.navy,
-                      size: 20,
-                    ),
+                    Icon(Icons.info_outline, color: AppColors.navy, size: 20),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         "After clicking the link, this screen will refresh automatically.",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.navy,
-                        ),
+                        style: TextStyle(fontSize: 12, color: AppColors.navy),
                       ),
                     ),
                   ],
@@ -239,10 +252,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 onPressed: _useDifferentAccount,
                 child: const Text(
                   "Use a different account",
-                  style: TextStyle(
-                    color: AppColors.textGray,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: AppColors.textGray, fontSize: 13),
                 ),
               ),
             ],

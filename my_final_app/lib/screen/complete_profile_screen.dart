@@ -1,8 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../config/constants.dart';
+import '../models/notification_model.dart';
 import '../providers/auth_provider.dart';
+import '../services/notification_service.dart';
 import '../theme/app_colors.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
@@ -20,6 +23,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final _lineIdCtrl = TextEditingController();
 
   bool _loading = false;
+  String? _studentIdError;
 
   @override
   void dispose() {
@@ -36,20 +40,38 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     setState(() => _loading = true);
     try {
       await context.read<AuthState>().completeProfile(
-            displayName: _displayNameCtrl.text.trim(),
-            studentId: _studentIdCtrl.text.trim(),
-            faculty: _facultyCtrl.text.trim(),
-            lineId: _lineIdCtrl.text.trim(),
-          );
+        displayName: _displayNameCtrl.text.trim(),
+        studentId: _studentIdCtrl.text.trim(),
+        faculty: _facultyCtrl.text.trim(),
+        lineId: _lineIdCtrl.text.trim(),
+      );
+      // Fire-and-forget: send welcome notification
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        NotificationService()
+            .send(
+              recipientUid: uid,
+              type: NotificationType.welcome,
+              title: 'Welcome to ModSwap!',
+              body: 'Start buying, selling, and swapping with KMUTT',
+            )
+            .catchError((_) {});
+      }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: AppColors.logoutRed,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      final msg = e.toString();
+      if (msg.contains('STUDENT_ID_CONFLICT') ||
+          msg.contains('Student ID is already in use')) {
+        setState(() => _studentIdError = 'Student ID is already in use');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: AppColors.logoutRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -75,12 +97,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       AppConstants.logoMascot,
                       height: 180,
                       fit: BoxFit.contain,
+                      semanticLabel: 'ModSwap mascot logo',
                     ),
                     const SizedBox(height: 4),
                     Image.asset(
                       AppConstants.logoFont,
                       height: 120,
                       fit: BoxFit.contain,
+                      semanticLabel: 'ModSwap',
                     ),
                     const SizedBox(height: 20),
                     const Text(
@@ -96,10 +120,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     const Text(
                       "Almost there! Fill in your details so other students can contact you.",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textGray,
-                      ),
+                      style: TextStyle(fontSize: 13, color: AppColors.textGray),
                     ),
                     const SizedBox(height: 24),
 
@@ -129,20 +150,23 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       controller: _studentIdCtrl,
                       keyboardType: TextInputType.number,
                       maxLength: AppConstants.studentIdLength,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onChanged: (_) {
+                        if (_studentIdError != null) {
+                          setState(() => _studentIdError = null);
+                        }
+                      },
                       decoration: _inputDecoration(
                         hint:
                             "${AppConstants.studentIdLength}-digit student ID",
                         icon: Icons.badge_outlined,
+                        hasError: _studentIdError != null,
                       ).copyWith(counterText: ''),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
                           return "Please enter your student ID";
                         }
-                        if (v.trim().length !=
-                            AppConstants.studentIdLength) {
+                        if (v.trim().length != AppConstants.studentIdLength) {
                           return "Student ID must be exactly "
                               "${AppConstants.studentIdLength} digits";
                         }
@@ -152,6 +176,19 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         return null;
                       },
                     ),
+                    if (_studentIdError != null) ...[
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16),
+                        child: Text(
+                          _studentIdError!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
 
                     _FieldLabel("Faculty"),
@@ -232,7 +269,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
   }
 
-  InputDecoration _inputDecoration({required String hint, IconData? icon}) {
+  InputDecoration _inputDecoration({
+    required String hint,
+    IconData? icon,
+    bool hasError = false,
+  }) {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: AppColors.textGray, fontSize: 14),
@@ -248,7 +289,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
+        borderSide: hasError
+            ? const BorderSide(color: Colors.red, width: 1)
+            : BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),

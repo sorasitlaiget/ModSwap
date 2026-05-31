@@ -20,16 +20,41 @@ service cloud.firestore {
 
     // === Users Collection ===
     match /users/{userId} {
-      // ทุกคนใน KMUTT อ่าน profile คนอื่นได้ (เพื่อดู rating ของผู้ขาย)
-      allow read: if isKmuttEmail();
+      // ทุกคนที่ login แล้วอ่าน profile ได้ (เพื่อ lookup lineId และดู rating)
+      allow read: if isAuthenticated();
 
-      // เขียนได้เฉพาะผ่าน Cloud Functions เท่านั้น
-      // (Frontend จะใช้ API endpoint แทน)
-      allow create, update, delete: if false;
+      // อนุญาตให้ update เฉพาะ rating/totalReviews/updatedAt เท่านั้น (buyer ส่ง rating ให้ seller)
+      allow update: if isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['rating', 'totalReviews', 'updatedAt']);
+
+      allow create, delete: if false;
     }
 
-    // === ใส่ rules อื่นๆ ในอนาคต ===
-    // match /listings/{listingId} { ... }
+    // === Pending Ratings Collection ===
+    match /pendingRatings/{ratingId} {
+      // Buyer reads/deletes their own pending ratings (for real-time popup)
+      allow read, delete: if isAuthenticated() && resource.data.buyerUid == request.auth.uid;
+      // Seller creates or re-sets pending rating (idempotent upsert using listingId as doc ID)
+      allow create, update: if isAuthenticated() &&
+        request.resource.data.sellerId == request.auth.uid;
+    }
+
+    // === Notifications Subcollection ===
+    match /users/{userId}/notifications/{notifId} {
+      allow read: if isOwner(userId);
+      // Any KMUTT user can create (buyer notifies seller, system notifies user)
+      allow create: if isKmuttEmail();
+      // Owner marks as read only
+      allow update: if isOwner(userId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if isOwner(userId);
+    }
+
+    // === Devices Subcollection ===
+    match /users/{userId}/devices/{deviceId} {
+      allow read, write: if isOwner(userId);
+    }
 
     // === Default deny ===
     match /{document=**} {

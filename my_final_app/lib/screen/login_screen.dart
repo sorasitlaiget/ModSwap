@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../config/constants.dart';
 import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
+import '../services/biometric_service.dart';
 import '../theme/app_colors.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
@@ -22,6 +23,25 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
   bool _rememberMe = true;
   String? _loginError;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometric();
+  }
+
+  Future<void> _checkBiometric() async {
+    final available = await BiometricService.instance.isAvailable();
+    final enabled = await BiometricService.instance.isEnabled();
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = available;
+        _biometricEnabled = enabled;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -31,26 +51,50 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
-  setState(() => _loginError = null);   
+    setState(() => _loginError = null);
 
-  if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _loading = true);
-  try {
-    final auth = context.read<AuthState>();
-    await auth.login(
-      email: _emailCtrl.text.trim(),
-      password: _passwordCtrl.text,
-    );
-    return;
-  } catch (e) {
-    if (!mounted) return;
-    setState(() {
-      _loginError = AuthService.parseErrorMessage(e);   // ← เก็บใน state
-      _loading = false;
-    });
+    setState(() => _loading = true);
+    try {
+      final email = _emailCtrl.text.trim();
+      final password = _passwordCtrl.text;
+      final auth = context.read<AuthState>();
+      if (_rememberMe && _biometricAvailable) {
+        await BiometricService.instance.saveCredentials(email, password);
+      }
+      await auth.login(email: email, password: password);
+      return;
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loginError = AuthService.parseErrorMessage(e);
+        _loading = false;
+      });
+    }
   }
-}
+
+  Future<void> _handleBiometricLogin() async {
+    final authenticated = await BiometricService.instance.authenticate();
+    if (!authenticated || !mounted) return;
+
+    final creds = await BiometricService.instance.loadCredentials();
+    if (creds == null || !mounted) return;
+
+    setState(() => _loading = true);
+    try {
+      await context.read<AuthState>().login(
+        email: creds.email,
+        password: creds.password,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loginError = AuthService.parseErrorMessage(e);
+        _loading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,12 +117,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       AppConstants.logoMascot,
                       height: 180,
                       fit: BoxFit.contain,
+                      semanticLabel: 'ModSwap mascot logo',
                     ),
                     const SizedBox(height: 2),
                     Image.asset(
                       AppConstants.logoFont,
                       height: 120,
                       fit: BoxFit.contain,
+                      semanticLabel: 'ModSwap',
                     ),
                     const SizedBox(height: 2),
 
@@ -96,51 +142,48 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text(
                       "Login to your KMUTT account",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textGray,
-                      ),
+                      style: TextStyle(fontSize: 13, color: AppColors.textGray),
                     ),
                     const SizedBox(height: 28),
 
                     // Email
                     _FieldLabel("KMUTT Email"),
                     const SizedBox(height: 6),
-                   TextFormField(
-  controller: _emailCtrl,
-  keyboardType: TextInputType.emailAddress,
-  decoration: _inputDecoration(
-    hint: "student@mail.kmutt.ac.th",
-    icon: Icons.email_outlined,
-    hasError: _loginError != null,
-  ),
-  validator: (v) {
-    if (v == null || v.trim().isEmpty) {
-      return "Please enter your email";
-    }
-    if (!v.endsWith(AppConstants.kmuttDomain)) {
-      return "Must end with ${AppConstants.kmuttDomain}";
-    }
-    return null;
-  },
-),
+                    TextFormField(
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: _inputDecoration(
+                        hint: "student@mail.kmutt.ac.th",
+                        icon: Icons.email_outlined,
+                        hasError: _loginError != null,
+                      ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return "Please enter your email";
+                        }
+                        if (!v.endsWith(AppConstants.kmuttDomain)) {
+                          return "Must end with ${AppConstants.kmuttDomain}";
+                        }
+                        return null;
+                      },
+                    ),
 
-// ⭐ Error message ใต้ field
-if (_loginError != null) ...[
-  const SizedBox(height: 6),
-  Padding(
-    padding: const EdgeInsets.only(left: 16),
-    child: Text(
-      _loginError!,
-      style: const TextStyle(
-        color: Colors.red,
-        fontSize: 12,
-      ),
-    ),
-  ),
-],
+                    // ⭐ Error message ใต้ field
+                    if (_loginError != null) ...[
+                      const SizedBox(height: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16),
+                        child: Text(
+                          _loginError!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
 
-const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
                     // Password
                     _FieldLabel("Password"),
@@ -148,23 +191,27 @@ const SizedBox(height: 16),
                     TextFormField(
                       controller: _passwordCtrl,
                       obscureText: _isObscured,
-                      decoration: _inputDecoration(
-                        hint: "Enter your password",
-                        icon: Icons.lock_outline,
-                         hasError: _loginError != null,
-                      ).copyWith(
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isObscured
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: AppColors.textGray,
-                            size: 20,
+                      decoration:
+                          _inputDecoration(
+                            hint: "Enter your password",
+                            icon: Icons.lock_outline,
+                            hasError: _loginError != null,
+                          ).copyWith(
+                            suffixIcon: IconButton(
+                              tooltip: _isObscured
+                                  ? 'Show password'
+                                  : 'Hide password',
+                              icon: Icon(
+                                _isObscured
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.textGray,
+                                size: 20,
+                              ),
+                              onPressed: () =>
+                                  setState(() => _isObscured = !_isObscured),
+                            ),
                           ),
-                          onPressed: () =>
-                              setState(() => _isObscured = !_isObscured),
-                        ),
-                      ),
                       validator: (v) {
                         if (v == null || v.isEmpty) {
                           return "Please enter your password";
@@ -174,54 +221,60 @@ const SizedBox(height: 16),
                     ),
                     const SizedBox(height: 28),
                     // Remember Me + Forgot Password
-Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-    Row(
-      children: [
-        SizedBox(
-          width: 22,
-          height: 22,
-          child: Checkbox(
-            value: _rememberMe,
-            activeColor: AppColors.orange,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-            onChanged: (v) => setState(() => _rememberMe = v ?? true),
-          ),
-        ),
-        const SizedBox(width: 8),
-        const Text(
-          "Remember Me",
-          style: TextStyle(
-            fontSize: 13,
-            color: AppColors.textGray,
-          ),
-        ),
-      ],
-    ),
-    GestureDetector(
-      onTap: _loading
-          ? null
-          : () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ForgotPasswordScreen(),
-                ),
-              ),
-      child: const Text(
-        "Forgot Password?",
-        style: TextStyle(
-          color: AppColors.orange,
-          fontWeight: FontWeight.w600,
-          fontSize: 13,
-        ),
-      ),
-    ),
-  ],
-),
-const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: Checkbox(
+                                value: _rememberMe,
+                                activeColor: AppColors.orange,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                onChanged: (v) =>
+                                    setState(() => _rememberMe = v ?? true),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              "Remember Me",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textGray,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Semantics(
+                          button: true,
+                          label: 'Forgot Password',
+                          child: GestureDetector(
+                            onTap: _loading
+                                ? null
+                                : () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const ForgotPasswordScreen(),
+                                    ),
+                                  ),
+                            child: const Text(
+                              "Forgot Password?",
+                              style: TextStyle(
+                                color: AppColors.orange,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
 
                     // Login button
                     SizedBox(
@@ -254,6 +307,46 @@ const SizedBox(height: 20),
                               ),
                       ),
                     ),
+                    if (_biometricAvailable && _biometricEnabled) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              'or',
+                              style: TextStyle(color: AppColors.textGray),
+                            ),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 50,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.navy),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                          ),
+                          onPressed: _loading ? null : _handleBiometricLogin,
+                          icon: const Icon(
+                            Icons.fingerprint,
+                            color: AppColors.navy,
+                          ),
+                          label: const Text(
+                            'Sign in with Biometrics',
+                            style: TextStyle(
+                              color: AppColors.navy,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
 
                     // Register link
@@ -268,21 +361,25 @@ const SizedBox(height: 20),
                             fontSize: 13,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: _loading
-                              ? null
-                              : () => Navigator.push(
+                        Semantics(
+                          button: true,
+                          label: 'Register a new account',
+                          child: GestureDetector(
+                            onTap: _loading
+                                ? null
+                                : () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => const RegisterScreen(),
                                     ),
                                   ),
-                          child: const Text(
-                            "Register",
-                            style: TextStyle(
-                              color: AppColors.orange,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
+                            child: const Text(
+                              "Register",
+                              style: TextStyle(
+                                color: AppColors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ),
@@ -300,49 +397,49 @@ const SizedBox(height: 20),
   }
 
   InputDecoration _inputDecoration({
-  required String hint,
-  IconData? icon,
-  bool hasError = false,
-}) {
-  return InputDecoration(
-    hintText: hint,
-    hintStyle: const TextStyle(color: AppColors.textGray, fontSize: 14),
-    prefixIcon: icon != null
-        ? Icon(icon, color: AppColors.textGray, size: 20)
-        : null,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-    filled: true,
-    fillColor: Colors.white,
+    required String hint,
+    IconData? icon,
+    bool hasError = false,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: AppColors.textGray, fontSize: 14),
+      prefixIcon: icon != null
+          ? Icon(icon, color: AppColors.textGray, size: 20)
+          : null,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      filled: true,
+      fillColor: Colors.white,
 
-    // ⭐ ปกติ (ยังไม่ focus, ยังไม่ error) — เทาอ่อน
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(28),
-      borderSide: BorderSide(
-        color: hasError ? Colors.red : const Color(0xFFE5E7EB),
-        width: 1.2,
+      // ⭐ ปกติ (ยังไม่ focus, ยังไม่ error) — เทาอ่อน
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(28),
+        borderSide: BorderSide(
+          color: hasError ? Colors.red : const Color(0xFFE5E7EB),
+          width: 1.2,
+        ),
       ),
-    ),  
 
-    // ⭐ ตอน focus (คลิกแล้วกำลังพิมพ์) — ส้ม
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(28),
-      borderSide: BorderSide(
-        color: hasError ? Colors.red : AppColors.orange,
-        width: 1.8,
+      // ⭐ ตอน focus (คลิกแล้วกำลังพิมพ์) — ส้ม
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(28),
+        borderSide: BorderSide(
+          color: hasError ? Colors.red : AppColors.orange,
+          width: 1.8,
+        ),
       ),
-    ),
 
-    // Error state (จาก validator)
-    errorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(28),
-      borderSide: const BorderSide(color: Colors.red, width: 1.2),
-    ),
-    focusedErrorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(28),
-      borderSide: const BorderSide(color: Colors.red, width: 1.8),
-    ),
-  );
-}
+      // Error state (จาก validator)
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(28),
+        borderSide: const BorderSide(color: Colors.red, width: 1.2),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(28),
+        borderSide: const BorderSide(color: Colors.red, width: 1.8),
+      ),
+    );
+  }
 }
 
 class _FieldLabel extends StatelessWidget {

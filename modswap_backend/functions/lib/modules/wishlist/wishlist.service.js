@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WishlistService = void 0;
 const app_error_1 = require("../../core/errors/app-error");
 const logger_util_1 = require("../../utils/logger.util");
+const notification_util_1 = require("../../utils/notification.util");
 /**
  * Wishlist Service - business logic for wishlist
  */
@@ -29,6 +30,15 @@ class WishlistService {
         }
         await this.wishlistRepo.add(uid, listingId);
         logger_util_1.logger.info('Added to wishlist', { uid, listingId });
+        // Fire-and-forget: notify the seller
+        (0, notification_util_1.sendNotification)({
+            recipientUid: listing.ownerId,
+            type: 'wishlist',
+            title: 'Someone Wishlisted Your Item',
+            body: `"${listing.title}" was added to a wishlist`,
+            deepLinkTarget: `/item/${listingId}`,
+            data: { itemId: listingId },
+        }).catch(() => null);
     }
     /**
      * Remove a listing from user's wishlist (idempotent)

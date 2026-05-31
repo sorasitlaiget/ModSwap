@@ -8,8 +8,9 @@ if (admin.apps.length === 0) {
   admin.initializeApp();
 }
 
-export const firestore = admin.firestore();
+export const db = admin.firestore();
+export const firestore = db; // alias ไว้ใช้กับโค้ดเดิม
 export const auth = admin.auth();
 
 // ตั้งค่าให้ ignore undefined fields ตอนเขียน Firestore
-firestore.settings({ ignoreUndefinedProperties: true });
+db.settings({ ignoreUndefinedProperties: true });

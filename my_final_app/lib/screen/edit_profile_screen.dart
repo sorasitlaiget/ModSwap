@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
@@ -11,7 +10,6 @@ import '../theme/app_theme_ext.dart';
 /// - Student ID
 /// - Faculty
 /// - Line ID
-/// - Password (Firebase Auth)
 ///
 /// Email is shown read-only because Firebase email change requires a
 /// separate verification flow.
@@ -29,20 +27,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _studentIdCtrl;
   late final TextEditingController _facultyCtrl;
   late final TextEditingController _lineIdCtrl;
-  late final TextEditingController _passwordCtrl;
 
   bool _saving = false;
-  bool _obscurePassword = true;
 
   @override
   void initState() {
     super.initState();
     final profile = context.read<AuthState>().profile;
     _displayNameCtrl = TextEditingController(text: profile?.displayName ?? '');
-    _studentIdCtrl   = TextEditingController(text: profile?.studentId   ?? '');
-    _facultyCtrl     = TextEditingController(text: profile?.faculty     ?? '');
-    _lineIdCtrl      = TextEditingController(text: profile?.lineId      ?? '');
-    _passwordCtrl    = TextEditingController();
+    _studentIdCtrl = TextEditingController(text: profile?.studentId ?? '');
+    _facultyCtrl = TextEditingController(text: profile?.faculty ?? '');
+    _lineIdCtrl = TextEditingController(text: profile?.lineId ?? '');
   }
 
   @override
@@ -51,7 +46,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _studentIdCtrl.dispose();
     _facultyCtrl.dispose();
     _lineIdCtrl.dispose();
-    _passwordCtrl.dispose();
     super.dispose();
   }
 
@@ -66,16 +60,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       // 1) Save text fields (only if changed)
       final profile = auth.profile!;
       String? newDisplayName = _displayNameCtrl.text.trim();
-      String? newStudentId   = _studentIdCtrl.text.trim();
-      String? newFaculty     = _facultyCtrl.text.trim();
-      String? newLineId      = _lineIdCtrl.text.trim();
+      String? newStudentId = _studentIdCtrl.text.trim();
+      String? newFaculty = _facultyCtrl.text.trim();
+      String? newLineId = _lineIdCtrl.text.trim();
 
-      if (newDisplayName == profile.displayName)  newDisplayName = null;
-      if (newStudentId   == (profile.studentId   ?? '')) newStudentId = null;
-      if (newFaculty     == (profile.faculty     ?? '')) newFaculty   = null;
-      if (newLineId      == (profile.lineId      ?? '')) newLineId    = null;
+      if (newDisplayName == profile.displayName) newDisplayName = null;
+      if (newStudentId == (profile.studentId ?? '')) newStudentId = null;
+      if (newFaculty == (profile.faculty ?? '')) newFaculty = null;
+      if (newLineId == (profile.lineId ?? '')) newLineId = null;
 
-      final hasFieldChanges = newDisplayName != null ||
+      final hasFieldChanges =
+          newDisplayName != null ||
           newStudentId != null ||
           newFaculty != null ||
           newLineId != null;
@@ -89,11 +84,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       }
 
-      // 2) Save password (only if user entered one)
-      if (_passwordCtrl.text.isNotEmpty) {
-        await auth.updatePassword(_passwordCtrl.text);
-      }
-
       if (!mounted) return;
       messenger.showSnackBar(
         const SnackBar(
@@ -102,19 +92,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       );
       Navigator.pop(context, true);
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      final msg = e.code == 'requires-recent-login'
-          ? 'Please log out and log in again before changing your password.'
-          : (e.message ?? 'Failed to update password.');
-      messenger.showSnackBar(
-        SnackBar(content: Text(msg), backgroundColor: AppColors.logoutRed),
-      );
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Failed to save: ${e.toString().replaceAll('Exception: ', '')}'),
+          content: Text(
+            'Failed to save: ${e.toString().replaceAll('Exception: ', '')}',
+          ),
           backgroundColor: AppColors.logoutRed,
         ),
       );
@@ -141,7 +125,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               width: double.infinity,
               color: AppColors.navy,
               padding: EdgeInsets.fromLTRB(
-                  16, MediaQuery.of(context).padding.top + 12, 16, 28),
+                16,
+                MediaQuery.of(context).padding.top + 12,
+                16,
+                28,
+              ),
               child: Column(
                 children: [
                   Row(
@@ -205,42 +193,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 14),
-                      _LabeledField(
-                        label: 'Faculty',
-                        controller: _facultyCtrl,
-                      ),
+                      _LabeledField(label: 'Faculty', controller: _facultyCtrl),
                       const SizedBox(height: 14),
-                      _LabeledField(
-                        label: 'Line ID',
-                        controller: _lineIdCtrl,
-                      ),
-
-                      const SizedBox(height: 18),
-                      const Divider(color: Color(0xFFE0E0E0), thickness: 1),
-                      const SizedBox(height: 12),
-
-                      _LabeledField(
-                        label: 'Password',
-                        controller: _passwordCtrl,
-                        obscureText: _obscurePassword,
-                        hint: 'Leave blank to keep current',
-                        trailing: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            size: 20,
-                            color: AppColors.textGray,
-                          ),
-                          onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword),
-                        ),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return null;
-                          if (v.length < 6) return 'Password must be at least 6 characters';
-                          return null;
-                        },
-                      ),
+                      _LabeledField(label: 'Line ID', controller: _lineIdCtrl),
 
                       const SizedBox(height: 28),
                       SizedBox(
@@ -301,8 +256,7 @@ class _BackCircleButton extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.orange, width: 2),
         ),
-        child: const Icon(Icons.arrow_back,
-            color: AppColors.orange, size: 20),
+        child: const Icon(Icons.arrow_back, color: AppColors.orange, size: 20),
       ),
     );
   }
@@ -314,22 +268,16 @@ class _LabeledField extends StatelessWidget {
   final TextEditingController? controller;
   final String? initialValueOverride;
   final bool readOnly;
-  final bool obscureText;
-  final String? hint;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
-  final Widget? trailing;
 
   const _LabeledField({
     required this.label,
     this.controller,
     this.initialValueOverride,
     this.readOnly = false,
-    this.obscureText = false,
-    this.hint,
     this.keyboardType,
     this.validator,
-    this.trailing,
   });
 
   @override
@@ -352,7 +300,6 @@ class _LabeledField extends StatelessWidget {
           controller: controller,
           initialValue: controller == null ? initialValueOverride : null,
           readOnly: readOnly,
-          obscureText: obscureText,
           keyboardType: keyboardType,
           validator: validator,
           style: TextStyle(
@@ -362,19 +309,13 @@ class _LabeledField extends StatelessWidget {
           decoration: InputDecoration(
             filled: true,
             fillColor: context.cardBg,
-            hintText: hint,
-            hintStyle: TextStyle(
-              color: context.secondaryText,
-              fontWeight: FontWeight.normal,
-              fontSize: 13,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: 14,
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            suffixIcon: trailing ??
-                (readOnly
-                    ? null
-                    : Icon(Icons.edit,
-                        size: 18, color: context.secondaryText)),
+            suffixIcon: readOnly
+                ? null
+                : Icon(Icons.edit, size: 18, color: context.secondaryText),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(30),
               borderSide: BorderSide(color: context.border),

@@ -95,10 +95,7 @@ class SwapRequestCard extends StatelessWidget {
         Flexible(
           child: Text(
             value,
-            style: const TextStyle(
-              fontSize: 10.5,
-              color: Color(0xFF1A1A1A),
-            ),
+            style: const TextStyle(fontSize: 10.5, color: Color(0xFF1A1A1A)),
             overflow: TextOverflow.ellipsis,
           ),
         ),

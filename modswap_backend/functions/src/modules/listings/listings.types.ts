@@ -91,6 +91,11 @@ export interface Listing {
   // Stats
   views: number;
 
+  // ⭐ Semantic search (Gemini embedding 768-dim)
+  // Generated from title + description + category + condition
+  embedding: number[] | null;
+  embeddingHash: string | null;
+
   // Timestamps
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -120,6 +125,8 @@ export type UpdateListingData = Partial<
     | 'meetingPoint'
     | 'state'
     | 'publishedAt'
+    | 'embedding'
+    | 'embeddingHash'
   >
 >;
 

@@ -22,6 +22,8 @@ function createAuthRouter() {
     router.get('/me', auth_middleware_1.authMiddleware, controller.getMyProfile);
     router.post('/complete-profile', auth_middleware_1.authMiddleware, (0, validation_middleware_1.validateBody)(auth_validator_1.completeProfileSchema), controller.completeProfile);
     router.patch('/profile', auth_middleware_1.authMiddleware, (0, validation_middleware_1.validateBody)(auth_validator_1.updateProfileSchema), controller.updateProfile);
+    router.patch('/password', auth_middleware_1.authMiddleware, (0, validation_middleware_1.validateBody)(auth_validator_1.changePasswordSchema), controller.changePassword);
+    router.post('/verify-device', auth_middleware_1.authMiddleware, (0, validation_middleware_1.validateBody)(auth_validator_1.verifyDeviceSchema), controller.verifyDevice);
     return router;
 }
 //# sourceMappingURL=auth.routes.js.map

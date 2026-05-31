@@ -72,5 +72,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'modswap-7b425.firebasestorage.app',
     iosBundleId: 'com.example.myFinalApp',
   );
-
 }
