@@ -15,16 +15,15 @@ class CreateListingUseCase {
     ListingCondition? condition,
     List<String>? images,
     MeetingPoint? meetingPoint,
-  }) =>
-      _repo.create(
-        title: title,
-        description: description,
-        category: category,
-        type: type,
-        price: price,
-        swapPreference: swapPreference,
-        condition: condition,
-        images: images,
-        meetingPoint: meetingPoint,
-      );
+  }) => _repo.create(
+    title: title,
+    description: description,
+    category: category,
+    type: type,
+    price: price,
+    swapPreference: swapPreference,
+    condition: condition,
+    images: images,
+    meetingPoint: meetingPoint,
+  );
 }

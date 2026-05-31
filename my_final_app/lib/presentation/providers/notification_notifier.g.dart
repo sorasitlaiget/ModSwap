@@ -13,14 +13,14 @@ String _$notificationNotifierHash() =>
 @ProviderFor(NotificationNotifier)
 final notificationNotifierProvider =
     NotifierProvider<NotificationNotifier, List<AppNotification>>.internal(
-  NotificationNotifier.new,
-  name: r'notificationNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$notificationNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      NotificationNotifier.new,
+      name: r'notificationNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$notificationNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$NotificationNotifier = Notifier<List<AppNotification>>;
 // ignore_for_file: type=lint

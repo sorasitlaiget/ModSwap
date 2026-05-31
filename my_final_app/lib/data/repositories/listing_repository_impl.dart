@@ -13,22 +13,20 @@ class ListingRepositoryImpl implements ListingRepository {
     String? search,
     int limit = 20,
     String? cursor,
-  }) =>
-      _ds.getPublished(
-        category: category,
-        type: type,
-        search: search,
-        limit: limit,
-        cursor: cursor,
-      );
+  }) => _ds.getPublished(
+    category: category,
+    type: type,
+    search: search,
+    limit: limit,
+    cursor: cursor,
+  );
 
   @override
   Future<List<Listing>> getMyListings({
     String state = 'all',
     int limit = 20,
     String? cursor,
-  }) =>
-      _ds.getMyListings(state: state, limit: limit, cursor: cursor);
+  }) => _ds.getMyListings(state: state, limit: limit, cursor: cursor);
 
   @override
   Future<Listing> getById(String id) => _ds.getById(id);
@@ -39,8 +37,7 @@ class ListingRepositoryImpl implements ListingRepository {
     String? category,
     String? type,
     int limit = 20,
-  }) =>
-      _ds.search(query: query, category: category, type: type, limit: limit);
+  }) => _ds.search(query: query, category: category, type: type, limit: limit);
 
   @override
   Future<Listing> create({
@@ -53,18 +50,17 @@ class ListingRepositoryImpl implements ListingRepository {
     ListingCondition? condition,
     List<String>? images,
     MeetingPoint? meetingPoint,
-  }) =>
-      _ds.create(
-        title: title,
-        description: description,
-        category: category,
-        type: type,
-        price: price,
-        swapPreference: swapPreference,
-        condition: condition,
-        images: images,
-        meetingPoint: meetingPoint,
-      );
+  }) => _ds.create(
+    title: title,
+    description: description,
+    category: category,
+    type: type,
+    price: price,
+    swapPreference: swapPreference,
+    condition: condition,
+    images: images,
+    meetingPoint: meetingPoint,
+  );
 
   @override
   Future<Listing> update(
@@ -78,19 +74,18 @@ class ListingRepositoryImpl implements ListingRepository {
     ListingCondition? condition,
     List<String>? images,
     MeetingPoint? meetingPoint,
-  }) =>
-      _ds.update(
-        id,
-        title: title,
-        description: description,
-        category: category,
-        type: type,
-        price: price,
-        swapPreference: swapPreference,
-        condition: condition,
-        images: images,
-        meetingPoint: meetingPoint,
-      );
+  }) => _ds.update(
+    id,
+    title: title,
+    description: description,
+    category: category,
+    type: type,
+    price: price,
+    swapPreference: swapPreference,
+    condition: condition,
+    images: images,
+    meetingPoint: meetingPoint,
+  );
 
   @override
   Future<Listing> publish(String id) => _ds.publish(id);
@@ -104,16 +99,15 @@ class ListingRepositoryImpl implements ListingRepository {
     double? finalPrice,
     String? whatIGotReturn,
     String? swapItemPhotoURL,
-  }) =>
-      _ds.markSold(
-        id,
-        dealType: dealType,
-        buyerLineId: buyerLineId,
-        dateCompleted: dateCompleted,
-        finalPrice: finalPrice,
-        whatIGotReturn: whatIGotReturn,
-        swapItemPhotoURL: swapItemPhotoURL,
-      );
+  }) => _ds.markSold(
+    id,
+    dealType: dealType,
+    buyerLineId: buyerLineId,
+    dateCompleted: dateCompleted,
+    finalPrice: finalPrice,
+    whatIGotReturn: whatIGotReturn,
+    swapItemPhotoURL: swapItemPhotoURL,
+  );
 
   @override
   Future<void> delete(String id) => _ds.delete(id);

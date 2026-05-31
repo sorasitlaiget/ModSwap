@@ -102,7 +102,16 @@ class UserProfile {
 
   @override
   int get hashCode => Object.hash(
-    id, email, displayName, lineId, studentId,
-    faculty, photoURL, rating, totalReviews, totalTrades, isProfileComplete,
+    id,
+    email,
+    displayName,
+    lineId,
+    studentId,
+    faculty,
+    photoURL,
+    rating,
+    totalReviews,
+    totalTrades,
+    isProfileComplete,
   );
 }

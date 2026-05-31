@@ -90,7 +90,10 @@ class AuthRemoteDataSource {
     if (studentId != null) body['studentId'] = studentId;
     if (faculty != null) body['faculty'] = faculty;
     if (lineId != null) body['lineId'] = lineId;
-    final data = await _client.patch<Map<String, dynamic>>('/auth/profile', body: body);
+    final data = await _client.patch<Map<String, dynamic>>(
+      '/auth/profile',
+      body: body,
+    );
     return UserProfile.fromJson(data);
   }
 

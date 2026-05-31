@@ -113,7 +113,9 @@ class AppNotification {
     final diff = now.difference(createdAt);
     if (diff.inMinutes < 1) return 'Just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-    if (diff.inHours < 24) return '${diff.inHours} hour${diff.inHours > 1 ? 's' : ''} ago';
+    if (diff.inHours < 24) {
+      return '${diff.inHours} hour${diff.inHours > 1 ? 's' : ''} ago';
+    }
     if (diff.inDays == 1) return 'Yesterday ${_fmt(createdAt)}';
     if (diff.inDays < 7) return '${diff.inDays} days ago';
     return '${createdAt.day}/${createdAt.month}/${createdAt.year}';

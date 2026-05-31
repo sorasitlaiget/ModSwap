@@ -28,7 +28,9 @@ class NotificationNotifier extends _$NotificationNotifier {
     ref.onDispose(() => _sub?.cancel());
 
     final authData = ref.watch(authNotifierProvider);
-    final uid = authData.status == AuthStatus.authenticated ? authData.uid : null;
+    final uid = authData.status == AuthStatus.authenticated
+        ? authData.uid
+        : null;
 
     if (uid == null) {
       _sub?.cancel();
@@ -51,7 +53,9 @@ class NotificationNotifier extends _$NotificationNotifier {
   Future<void> markRead(String id) async {
     if (_currentUid == null) return;
     await _markRead(_currentUid!, id);
-    state = state.map((n) => n.id == id ? n.copyWith(isRead: true) : n).toList();
+    state = state
+        .map((n) => n.id == id ? n.copyWith(isRead: true) : n)
+        .toList();
   }
 
   Future<void> markAllRead() async {

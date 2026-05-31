@@ -94,7 +94,11 @@ class AuthNotifier extends _$AuthNotifier {
       final email = _repo.currentUserEmail;
       final verified = await _repo.checkEmailVerified();
       if (!verified) {
-        state = AuthStateData(status: AuthStatus.emailUnverified, uid: uid, email: email);
+        state = AuthStateData(
+          status: AuthStatus.emailUnverified,
+          uid: uid,
+          email: email,
+        );
         return;
       }
 
@@ -124,18 +128,20 @@ class AuthNotifier extends _$AuthNotifier {
 
   void _subscribeToProfileChanges(String uid) {
     _profileSub?.cancel();
-    _profileSub = _repo.watchProfileData(uid).listen(
-      (data) {
-        if (data == null || state.profile == null) return;
-        final updated = state.profile!.mergeFromFirestore(data);
-        if (updated == state.profile) return;
-        AppLogger.d('[AuthNotifier] Profile stats updated from Firestore');
-        state = state.copyWith(profile: updated);
-      },
-      onError: (Object err) {
-        AppLogger.e('[AuthNotifier] Profile listener error', error: err);
-      },
-    );
+    _profileSub = _repo
+        .watchProfileData(uid)
+        .listen(
+          (data) {
+            if (data == null || state.profile == null) return;
+            final updated = state.profile!.mergeFromFirestore(data);
+            if (updated == state.profile) return;
+            AppLogger.d('[AuthNotifier] Profile stats updated from Firestore');
+            state = state.copyWith(profile: updated);
+          },
+          onError: (Object err) {
+            AppLogger.e('[AuthNotifier] Profile listener error', error: err);
+          },
+        );
   }
 
   Future<void> login({required String email, required String password}) async {
@@ -149,7 +155,10 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
-  Future<void> register({required String email, required String password}) async {
+  Future<void> register({
+    required String email,
+    required String password,
+  }) async {
     state = state.copyWith(errorMessage: null);
     try {
       await _register(email, password);

@@ -59,8 +59,8 @@ final listingRemoteDataSourceProvider = Provider<ListingRemoteDataSource>(
 
 final notificationRemoteDataSourceProvider =
     Provider<NotificationRemoteDataSource>(
-  (ref) => NotificationRemoteDataSource(ref.read(_firestoreProvider)),
-);
+      (ref) => NotificationRemoteDataSource(ref.read(_firestoreProvider)),
+    );
 
 final ratingRemoteDataSourceProvider = Provider<RatingRemoteDataSource>(
   (ref) => RatingRemoteDataSource(

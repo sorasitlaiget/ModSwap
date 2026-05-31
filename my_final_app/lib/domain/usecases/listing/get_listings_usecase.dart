@@ -11,12 +11,11 @@ class GetListingsUseCase {
     String? search,
     int limit = 20,
     String? cursor,
-  }) =>
-      _repo.getPublished(
-        category: category,
-        type: type,
-        search: search,
-        limit: limit,
-        cursor: cursor,
-      );
+  }) => _repo.getPublished(
+    category: category,
+    type: type,
+    search: search,
+    limit: limit,
+    cursor: cursor,
+  );
 }

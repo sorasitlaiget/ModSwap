@@ -84,17 +84,20 @@ class ListingRemoteDataSource {
     List<String>? images,
     MeetingPoint? meetingPoint,
   }) async {
-    final res = await _dio.post('/listings', data: {
-      'title': title,
-      if (description != null) 'description': description,
-      if (category != null) 'category': category.apiValue,
-      if (type != null) 'type': type.apiValue,
-      if (price != null) 'price': price,
-      if (swapPreference != null) 'swapPreference': swapPreference,
-      if (condition != null) 'condition': condition.apiValue,
-      if (images != null) 'images': images,
-      if (meetingPoint != null) 'meetingPoint': meetingPoint.toJson(),
-    });
+    final res = await _dio.post(
+      '/listings',
+      data: {
+        'title': title,
+        if (description != null) 'description': description,
+        if (category != null) 'category': category.apiValue,
+        if (type != null) 'type': type.apiValue,
+        if (price != null) 'price': price,
+        if (swapPreference != null) 'swapPreference': swapPreference,
+        if (condition != null) 'condition': condition.apiValue,
+        if (images != null) 'images': images,
+        if (meetingPoint != null) 'meetingPoint': meetingPoint.toJson(),
+      },
+    );
     return Listing.fromJson(res.data['data'] as Map<String, dynamic>);
   }
 
@@ -110,17 +113,20 @@ class ListingRemoteDataSource {
     List<String>? images,
     MeetingPoint? meetingPoint,
   }) async {
-    final res = await _dio.patch('/listings/$id', data: {
-      if (title != null) 'title': title,
-      if (description != null) 'description': description,
-      if (category != null) 'category': category.apiValue,
-      if (type != null) 'type': type.apiValue,
-      if (price != null) 'price': price,
-      if (swapPreference != null) 'swapPreference': swapPreference,
-      if (condition != null) 'condition': condition.apiValue,
-      if (images != null) 'images': images,
-      if (meetingPoint != null) 'meetingPoint': meetingPoint.toJson(),
-    });
+    final res = await _dio.patch(
+      '/listings/$id',
+      data: {
+        if (title != null) 'title': title,
+        if (description != null) 'description': description,
+        if (category != null) 'category': category.apiValue,
+        if (type != null) 'type': type.apiValue,
+        if (price != null) 'price': price,
+        if (swapPreference != null) 'swapPreference': swapPreference,
+        if (condition != null) 'condition': condition.apiValue,
+        if (images != null) 'images': images,
+        if (meetingPoint != null) 'meetingPoint': meetingPoint.toJson(),
+      },
+    );
     return Listing.fromJson(res.data['data'] as Map<String, dynamic>);
   }
 
@@ -138,14 +144,17 @@ class ListingRemoteDataSource {
     String? whatIGotReturn,
     String? swapItemPhotoURL,
   }) async {
-    await _dio.post('/listings/$id/sold', data: {
-      'dealType': dealType,
-      'buyerLineId': buyerLineId,
-      'dateCompleted': dateCompleted,
-      if (finalPrice != null) 'finalPrice': finalPrice,
-      if (whatIGotReturn != null) 'whatIGotReturn': whatIGotReturn,
-      if (swapItemPhotoURL != null) 'swapItemPhotoURL': swapItemPhotoURL,
-    });
+    await _dio.post(
+      '/listings/$id/sold',
+      data: {
+        'dealType': dealType,
+        'buyerLineId': buyerLineId,
+        'dateCompleted': dateCompleted,
+        if (finalPrice != null) 'finalPrice': finalPrice,
+        if (whatIGotReturn != null) 'whatIGotReturn': whatIGotReturn,
+        if (swapItemPhotoURL != null) 'swapItemPhotoURL': swapItemPhotoURL,
+      },
+    );
   }
 
   Future<void> delete(String id) async {

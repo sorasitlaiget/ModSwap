@@ -10,11 +10,10 @@ class UpdateProfileUseCase {
     String? studentId,
     String? faculty,
     String? lineId,
-  }) =>
-      _repo.updateProfile(
-        displayName: displayName,
-        studentId: studentId,
-        faculty: faculty,
-        lineId: lineId,
-      );
+  }) => _repo.updateProfile(
+    displayName: displayName,
+    studentId: studentId,
+    faculty: faculty,
+    lineId: lineId,
+  );
 }

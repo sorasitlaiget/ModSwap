@@ -17,7 +17,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<UserProfile?> watchProfile(String uid) {
-    return watchProfileData(uid).map((data) => null); // use watchProfileData for merging
+    return watchProfileData(
+      uid,
+    ).map((data) => null); // use watchProfileData for merging
   }
 
   @override
@@ -59,13 +61,12 @@ class AuthRepositoryImpl implements AuthRepository {
     required String studentId,
     required String faculty,
     required String lineId,
-  }) =>
-      _ds.completeProfile(
-        displayName: displayName,
-        studentId: studentId,
-        faculty: faculty,
-        lineId: lineId,
-      );
+  }) => _ds.completeProfile(
+    displayName: displayName,
+    studentId: studentId,
+    faculty: faculty,
+    lineId: lineId,
+  );
 
   @override
   Future<UserProfile> updateProfile({
@@ -73,13 +74,12 @@ class AuthRepositoryImpl implements AuthRepository {
     String? studentId,
     String? faculty,
     String? lineId,
-  }) =>
-      _ds.updateProfile(
-        displayName: displayName,
-        studentId: studentId,
-        faculty: faculty,
-        lineId: lineId,
-      );
+  }) => _ds.updateProfile(
+    displayName: displayName,
+    studentId: studentId,
+    faculty: faculty,
+    lineId: lineId,
+  );
 
   @override
   Future<void> changePassword(String newPassword) =>

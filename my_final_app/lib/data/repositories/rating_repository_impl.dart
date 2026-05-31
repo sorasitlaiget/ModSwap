@@ -20,21 +20,19 @@ class RatingRepositoryImpl implements RatingRepository {
     required String sellerName,
     required String listingId,
     required String listingTitle,
-  }) =>
-      _ds.createPendingRating(
-        buyerUid: buyerUid,
-        sellerId: sellerId,
-        sellerName: sellerName,
-        listingId: listingId,
-        listingTitle: listingTitle,
-      );
+  }) => _ds.createPendingRating(
+    buyerUid: buyerUid,
+    sellerId: sellerId,
+    sellerName: sellerName,
+    listingId: listingId,
+    listingTitle: listingTitle,
+  );
 
   @override
   Future<void> submitRating({
     required String pendingRatingId,
     required int rating,
-  }) =>
-      _ds.submitRating(pendingRatingId: pendingRatingId, rating: rating);
+  }) => _ds.submitRating(pendingRatingId: pendingRatingId, rating: rating);
 
   @override
   Future<void> skipRating(String pendingRatingId) =>

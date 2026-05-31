@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_project/models/notification_model.dart';
+import 'package:flutter_project/domain/entities/notification.dart';
 
 void main() {
   final baseNotif = AppNotification(

@@ -27,13 +27,12 @@ class NotificationRepositoryImpl implements NotificationRepository {
     required String body,
     String? deepLinkTarget,
     Map<String, dynamic>? data,
-  }) =>
-      _ds.send(
-        recipientUid: recipientUid,
-        type: type,
-        title: title,
-        body: body,
-        deepLinkTarget: deepLinkTarget,
-        data: data,
-      );
+  }) => _ds.send(
+    recipientUid: recipientUid,
+    type: type,
+    title: title,
+    body: body,
+    deepLinkTarget: deepLinkTarget,
+    data: data,
+  );
 }

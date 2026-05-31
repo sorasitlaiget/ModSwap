@@ -225,16 +225,48 @@ class Listing {
 
 class KmuttPlaces {
   static const List<MeetingPoint> all = [
-    MeetingPoint(name: 'ลานเกียร์ (KMUTT Bangmod)', latitude: 13.6517, longitude: 100.4948),
-    MeetingPoint(name: 'อาคารเรียนรวม 4 (CB4)', latitude: 13.6505, longitude: 100.4946),
-    MeetingPoint(name: 'อาคารวิศววัฒนะ (S1)', latitude: 13.6510, longitude: 100.4950),
+    MeetingPoint(
+      name: 'ลานเกียร์ (KMUTT Bangmod)',
+      latitude: 13.6517,
+      longitude: 100.4948,
+    ),
+    MeetingPoint(
+      name: 'อาคารเรียนรวม 4 (CB4)',
+      latitude: 13.6505,
+      longitude: 100.4946,
+    ),
+    MeetingPoint(
+      name: 'อาคารวิศววัฒนะ (S1)',
+      latitude: 13.6510,
+      longitude: 100.4950,
+    ),
     MeetingPoint(name: 'หอสมุด KMUTT', latitude: 13.6516, longitude: 100.4955),
     MeetingPoint(name: 'โรงอาหารกลาง', latitude: 13.6512, longitude: 100.4944),
-    MeetingPoint(name: 'อาคารเรียนรวม 2 (CB2)', latitude: 13.6509, longitude: 100.4942),
-    MeetingPoint(name: 'หอพักนักศึกษา (Dorm)', latitude: 13.6485, longitude: 100.4955),
-    MeetingPoint(name: 'ป้ายรถเมล์ มจธ.', latitude: 13.6498, longitude: 100.4940),
-    MeetingPoint(name: 'อาคารพระจอมเกล้าราชานุสรณ์ 190 ปี', latitude: 13.6520, longitude: 100.4953),
-    MeetingPoint(name: 'สนามฟุตบอล KMUTT', latitude: 13.6504, longitude: 100.4960),
+    MeetingPoint(
+      name: 'อาคารเรียนรวม 2 (CB2)',
+      latitude: 13.6509,
+      longitude: 100.4942,
+    ),
+    MeetingPoint(
+      name: 'หอพักนักศึกษา (Dorm)',
+      latitude: 13.6485,
+      longitude: 100.4955,
+    ),
+    MeetingPoint(
+      name: 'ป้ายรถเมล์ มจธ.',
+      latitude: 13.6498,
+      longitude: 100.4940,
+    ),
+    MeetingPoint(
+      name: 'อาคารพระจอมเกล้าราชานุสรณ์ 190 ปี',
+      latitude: 13.6520,
+      longitude: 100.4953,
+    ),
+    MeetingPoint(
+      name: 'สนามฟุตบอล KMUTT',
+      latitude: 13.6504,
+      longitude: 100.4960,
+    ),
   ];
 }
 

@@ -13,7 +13,9 @@ class RatingRemoteDataSource {
         .collection('pendingRatings')
         .where('buyerUid', isEqualTo: uid)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => {'id': d.id, ...d.data()}).toList());
+        .map(
+          (snap) => snap.docs.map((d) => {'id': d.id, ...d.data()}).toList(),
+        );
   }
 
   Future<String?> findBuyerUidByLineId(String lineId) async {
@@ -56,7 +58,9 @@ class RatingRemoteDataSource {
     required String pendingRatingId,
     required int rating,
   }) async {
-    final pendingRef = _firestore.collection('pendingRatings').doc(pendingRatingId);
+    final pendingRef = _firestore
+        .collection('pendingRatings')
+        .doc(pendingRatingId);
     final pendingSnap = await pendingRef.get();
     if (!pendingSnap.exists) return;
     final pendingData = pendingSnap.data()!;
@@ -98,7 +102,8 @@ class RatingRemoteDataSource {
             recipientUid: sellerId,
             type: NotificationType.ratingReceived,
             title: 'New Rating Received',
-            body: 'You received $rating star${rating != 1 ? 's' : ''} for "$listingTitle"',
+            body:
+                'You received $rating star${rating != 1 ? 's' : ''} for "$listingTitle"',
             data: {'stars': rating, 'listingTitle': listingTitle},
           )
           .catchError((_) {});

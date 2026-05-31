@@ -10,11 +10,10 @@ class CompleteProfileUseCase {
     required String studentId,
     required String faculty,
     required String lineId,
-  }) =>
-      _repo.completeProfile(
-        displayName: displayName,
-        studentId: studentId,
-        faculty: faculty,
-        lineId: lineId,
-      );
+  }) => _repo.completeProfile(
+    displayName: displayName,
+    studentId: studentId,
+    faculty: faculty,
+    lineId: lineId,
+  );
 }

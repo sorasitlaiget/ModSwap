@@ -12,13 +12,14 @@ String _$authNotifierHash() => r'655ff948303a3330b9227c6a289881ba994136b7';
 @ProviderFor(AuthNotifier)
 final authNotifierProvider =
     NotifierProvider<AuthNotifier, AuthStateData>.internal(
-  AuthNotifier.new,
-  name: r'authNotifierProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$authNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      AuthNotifier.new,
+      name: r'authNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$authNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$AuthNotifier = Notifier<AuthStateData>;
 // ignore_for_file: type=lint
