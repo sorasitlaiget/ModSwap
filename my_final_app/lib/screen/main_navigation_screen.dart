@@ -3,10 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:firebase_crashlytics/firebase_crashlytics.dart'; // uncomment เมื่อ test บน release build
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import '../providers/notification_provider.dart';
-import '../providers/theme_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
+import '../providers/auth_notifier.dart';
+import '../providers/notification_notifier.dart';
+import '../providers/theme_notifier.dart';
 import '../services/listings_service.dart';
 import '../services/rating_service.dart';
 import '../theme/app_colors.dart';
@@ -22,14 +22,15 @@ import 'wishlist_screen.dart';
 import 'change_password_screen.dart';
 import 'edit_profile_screen.dart';
 
-class MainNavigationScreen extends StatefulWidget {
+class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
 
   @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+  ConsumerState<MainNavigationScreen> createState() =>
+      _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
+class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   int _currentIndex = 0;
   final _ratingService = RatingService();
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _ratingSubscription;
@@ -43,12 +44,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     _listenPendingRatings();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid != null && mounted) {
-        context.read<NotificationProvider>().init(uid);
-      }
-    });
+    // NotificationNotifier auto-initialises via Riverpod when auth state changes
   }
 
   @override
@@ -164,7 +160,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       bottomNavigationBar: ModSwapBottomNav(
         currentIndex: _currentIndex,
-        notificationCount: context.watch<NotificationProvider>().unreadCount,
+        notificationCount: ref
+            .watch(notificationNotifierProvider.notifier)
+            .unreadCount,
         onTap: _onTap,
       ),
     );
@@ -227,14 +225,14 @@ class _PlaceholderPage extends StatelessWidget {
 // MENU PAGE — redesigned to match Figma reference
 // (profile card + stats row + MY ACTIVITY list + Logout)
 // ===========================================================================
-class _MenuPage extends StatefulWidget {
+class _MenuPage extends ConsumerStatefulWidget {
   const _MenuPage({super.key});
 
   @override
-  State<_MenuPage> createState() => _MenuPageState();
+  ConsumerState<_MenuPage> createState() => _MenuPageState();
 }
 
-class _MenuPageState extends State<_MenuPage> {
+class _MenuPageState extends ConsumerState<_MenuPage> {
   final _listingsService = ListingsService();
   int? _itemsCount; // null = loading; int = loaded
 
@@ -347,13 +345,13 @@ class _MenuPageState extends State<_MenuPage> {
     );
 
     if (confirmed == true && context.mounted) {
-      await context.read<AuthState>().logout();
+      await ref.read(authNotifierProvider.notifier).logout();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final profile = context.watch<AuthState>().profile;
+    final profile = ref.watch(authNotifierProvider).profile;
     if (profile == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -460,16 +458,22 @@ class _MenuPageState extends State<_MenuPage> {
                         ),
                         const _RowDivider(),
                         // Dark Mode toggle — uses ThemeProvider to switch themes app-wide.
-                        Consumer<ThemeProvider>(
-                          builder: (context, themeProvider, _) {
+                        Builder(
+                          builder: (context) {
+                            final isDark =
+                                ref.watch(themeNotifierProvider) ==
+                                ThemeMode.dark;
                             return _MenuRow(
                               icon: Icons.dark_mode_outlined,
                               label: 'Dark Mode',
-                              onTap: () =>
-                                  themeProvider.toggle(!themeProvider.isDark),
+                              onTap: () => ref
+                                  .read(themeNotifierProvider.notifier)
+                                  .setDark(!isDark),
                               trailing: Switch(
-                                value: themeProvider.isDark,
-                                onChanged: themeProvider.toggle,
+                                value: isDark,
+                                onChanged: (v) => ref
+                                    .read(themeNotifierProvider.notifier)
+                                    .setDark(v),
                                 activeThumbColor: Colors.white,
                                 activeTrackColor: AppColors.orange,
                                 inactiveThumbColor: Colors.white,

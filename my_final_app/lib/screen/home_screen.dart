@@ -1,8 +1,8 @@
 import 'dart:async'; // 🎯 1. เพิ่ม import นี้สำหรับระบบหน่วงเวลา (Debounce)
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/listing.dart';
-import '../providers/auth_provider.dart';
+import '../providers/auth_notifier.dart';
 import '../services/listings_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme_ext.dart';
@@ -13,14 +13,14 @@ import '../widgets/home/category_chips.dart';
 import '../widgets/listing/listing_card_real.dart';
 import 'listing_detail_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _service = ListingsService();
 
   // 🎯 2. เพิ่มตัวแปร Timer สำหรับค้นหา และตัวแปรเก็บค่า Filter
@@ -199,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final profile = context.watch<AuthState>().profile;
+    final profile = ref.watch(authNotifierProvider).profile;
     final userName = profile?.displayName ?? 'Friend';
 
     return Container(

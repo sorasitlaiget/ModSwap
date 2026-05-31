@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_notifier.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme_ext.dart';
 
@@ -13,14 +13,14 @@ import '../theme/app_theme_ext.dart';
 ///
 /// Email is shown read-only because Firebase email change requires a
 /// separate verification flow.
-class EditProfileScreen extends StatefulWidget {
+class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
   @override
-  State<EditProfileScreen> createState() => _EditProfileScreenState();
+  ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _displayNameCtrl;
@@ -33,7 +33,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final profile = context.read<AuthState>().profile;
+    final profile = ref.read(authNotifierProvider).profile;
     _displayNameCtrl = TextEditingController(text: profile?.displayName ?? '');
     _studentIdCtrl = TextEditingController(text: profile?.studentId ?? '');
     _facultyCtrl = TextEditingController(text: profile?.faculty ?? '');
@@ -53,12 +53,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _saving = true);
-    final auth = context.read<AuthState>();
+    final notifier = ref.read(authNotifierProvider.notifier);
     final messenger = ScaffoldMessenger.of(context);
 
     try {
       // 1) Save text fields (only if changed)
-      final profile = auth.profile!;
+      final profile = ref.read(authNotifierProvider).profile!;
       String? newDisplayName = _displayNameCtrl.text.trim();
       String? newStudentId = _studentIdCtrl.text.trim();
       String? newFaculty = _facultyCtrl.text.trim();
@@ -76,7 +76,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           newLineId != null;
 
       if (hasFieldChanges) {
-        await auth.updateProfile(
+        await notifier.updateProfile(
           displayName: newDisplayName,
           studentId: newStudentId,
           faculty: newFaculty,
@@ -109,7 +109,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final profile = context.watch<AuthState>().profile;
+    final profile = ref.watch(authNotifierProvider).profile;
     if (profile == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }

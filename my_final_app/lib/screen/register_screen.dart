@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/constants.dart';
-import '../providers/auth_provider.dart';
+import '../providers/auth_notifier.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
@@ -59,11 +59,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _loading = true);
     try {
-      final auth = context.read<AuthState>();
-      await auth.register(
-        email: _emailCtrl.text.trim(),
-        password: _passCtrl.text,
-      );
+      await ref
+          .read(authNotifierProvider.notifier)
+          .register(email: _emailCtrl.text.trim(), password: _passCtrl.text);
 
       if (!mounted) return;
       await _showCheckEmailDialog(_emailCtrl.text.trim());
