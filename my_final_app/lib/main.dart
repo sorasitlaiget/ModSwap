@@ -21,8 +21,9 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   if (!kIsWeb) {
-    await FirebaseCrashlytics.instance
-        .setCrashlyticsCollectionEnabled(!kDebugMode);
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+      !kDebugMode,
+    );
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
     PlatformDispatcher.instance.onError = (error, stack) {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
@@ -46,14 +47,14 @@ void main() async {
 
   AppLogger.d('[main] Starting ModSwap');
 
-  runZonedGuarded(
-    () => runApp(const ProviderScope(child: ModSwapApp())),
-    (error, stack) {
-      if (!kIsWeb) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      }
-    },
-  );
+  runZonedGuarded(() => runApp(const ProviderScope(child: ModSwapApp())), (
+    error,
+    stack,
+  ) {
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    }
+  });
 }
 
 class ModSwapApp extends ConsumerWidget {

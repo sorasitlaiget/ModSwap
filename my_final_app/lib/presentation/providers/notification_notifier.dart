@@ -32,15 +32,10 @@ class NotificationNotifier extends _$NotificationNotifier {
 
     // Use ref.listen (not ref.watch) so profile updates don't re-run build()
     // and reset state to [].
-    ref.listen<AuthStateData>(
-      authNotifierProvider,
-      (_, next) {
-        final uid =
-            next.status == AuthStatus.authenticated ? next.uid : null;
-        _handleUidChange(uid);
-      },
-      fireImmediately: true,
-    );
+    ref.listen<AuthStateData>(authNotifierProvider, (_, next) {
+      final uid = next.status == AuthStatus.authenticated ? next.uid : null;
+      _handleUidChange(uid);
+    }, fireImmediately: true);
 
     return [];
   }
