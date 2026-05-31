@@ -6,7 +6,8 @@
       "Bash(dart format *)",
       "Bash(flutter analyze *)",
       "Bash(flutter test *)",
-      "Bash(echo \"EXIT_CODE: $?\")"
+      "Bash(echo \"EXIT_CODE: $?\")",
+      "Read(//Users/natsorasit/Desktop/Agile-Screenshort 2/Web/**)"
     ]
   }
 }
