@@ -534,54 +534,54 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                   button: true,
                                   label: 'Upload photo of the swap item',
                                   child: GestureDetector(
-                                  onTap: pickPhoto,
-                                  child: Container(
-                                    height: 110,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.softGray,
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: AppColors.textGray.withValues(
-                                          alpha: 0.3,
+                                    onTap: pickPhoto,
+                                    child: Container(
+                                      height: 110,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.softGray,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: AppColors.textGray.withValues(
+                                            alpha: 0.3,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    child: swapPhoto != null
-                                        ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              14,
-                                            ),
-                                            child: FutureBuilder<List<int>>(
-                                              future: swapPhoto!.readAsBytes(),
-                                              builder: (ctx, snap) =>
-                                                  snap.hasData
-                                                  ? Image.memory(
-                                                      snap.data! as dynamic,
-                                                      fit: BoxFit.cover,
-                                                    )
-                                                  : const SizedBox.shrink(),
-                                            ),
-                                          )
-                                        : const Center(
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.add,
-                                                  color: AppColors.orange,
-                                                ),
-                                                SizedBox(height: 8),
-                                                Text(
-                                                  'Upload photo',
-                                                  style: TextStyle(
-                                                    color: AppColors.textGray,
+                                      child: swapPhoto != null
+                                          ? ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                              child: FutureBuilder<List<int>>(
+                                                future: swapPhoto!
+                                                    .readAsBytes(),
+                                                builder: (ctx, snap) =>
+                                                    snap.hasData
+                                                    ? Image.memory(
+                                                        snap.data! as dynamic,
+                                                        fit: BoxFit.cover,
+                                                      )
+                                                    : const SizedBox.shrink(),
+                                              ),
+                                            )
+                                          : const Center(
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.add,
+                                                    color: AppColors.orange,
                                                   ),
-                                                ),
-                                              ],
+                                                  SizedBox(height: 8),
+                                                  Text(
+                                                    'Upload photo',
+                                                    style: TextStyle(
+                                                      color: AppColors.textGray,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
+                                    ),
                                   ),
-                                ),
                                 ),
                               ),
                             ],
@@ -664,7 +664,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                   onTap: () async {
                                     final picked = await showDatePicker(
                                       context: context,
-                                      initialDate: completedAt ?? DateTime.now(),
+                                      initialDate:
+                                          completedAt ?? DateTime.now(),
                                       firstDate: DateTime(2020),
                                       lastDate: DateTime.now(),
                                     );
@@ -1465,7 +1466,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 ),
               ),
               child: IconButton(
-                tooltip: _isInWishlist ? 'Remove from wishlist' : 'Add to wishlist',
+                tooltip: _isInWishlist
+                    ? 'Remove from wishlist'
+                    : 'Add to wishlist',
                 onPressed: _wishlistLoading ? null : _toggleWishlist,
                 icon: _wishlistLoading
                     ? const SizedBox(

@@ -5,7 +5,10 @@ void main() {
   group('ListingCategory.fromApi', () {
     test('parses valid api values', () {
       expect(ListingCategory.fromApi('textbooks'), ListingCategory.textbooks);
-      expect(ListingCategory.fromApi('electronics'), ListingCategory.electronics);
+      expect(
+        ListingCategory.fromApi('electronics'),
+        ListingCategory.electronics,
+      );
       expect(ListingCategory.fromApi('fashion'), ListingCategory.fashion);
       expect(ListingCategory.fromApi('dorm'), ListingCategory.dorm);
       expect(ListingCategory.fromApi('vehicles'), ListingCategory.vehicles);

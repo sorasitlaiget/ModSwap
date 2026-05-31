@@ -100,7 +100,10 @@ void main() {
     });
 
     test('securityAlert belongs to system category', () {
-      expect(NotificationType.securityAlert.category, NotificationCategory.system);
+      expect(
+        NotificationType.securityAlert.category,
+        NotificationCategory.system,
+      );
     });
   });
 

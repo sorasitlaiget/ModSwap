@@ -156,11 +156,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _TypeOption(icon: Icons.all_inclusive, label: 'All Items', value: 'all', current: _filterType),
+                    _TypeOption(
+                      icon: Icons.all_inclusive,
+                      label: 'All Items',
+                      value: 'all',
+                      current: _filterType,
+                    ),
                     const SizedBox(width: 10),
-                    _TypeOption(icon: Icons.sell_outlined, label: 'For Sale', value: 'sell', current: _filterType),
+                    _TypeOption(
+                      icon: Icons.sell_outlined,
+                      label: 'For Sale',
+                      value: 'sell',
+                      current: _filterType,
+                    ),
                     const SizedBox(width: 10),
-                    _TypeOption(icon: Icons.swap_horiz, label: 'Open to Swap', value: 'trade', current: _filterType),
+                    _TypeOption(
+                      icon: Icons.swap_horiz,
+                      label: 'Open to Swap',
+                      value: 'trade',
+                      current: _filterType,
+                    ),
                   ],
                 ),
               ],

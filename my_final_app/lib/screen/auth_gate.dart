@@ -21,7 +21,9 @@ class AuthGate extends StatelessWidget {
     return ListenableBuilder(
       listenable: auth,
       builder: (context, _) {
-        AppLogger.d('[AuthGate] ListenableBuilder rebuilt, status: ${auth.status}');
+        AppLogger.d(
+          '[AuthGate] ListenableBuilder rebuilt, status: ${auth.status}',
+        );
 
         switch (auth.status) {
           case AuthStatus.initializing:

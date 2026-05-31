@@ -137,25 +137,25 @@ class _NotificationScreenState extends State<NotificationScreen> {
       child: GestureDetector(
         onTap: () => setState(() => _selectedCategory = cat),
         child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive
-              ? AppColors.orange
-              : Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive
+                ? AppColors.orange
+                : Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -254,98 +254,98 @@ class _NotificationCard extends StatelessWidget {
         onTap: onTap,
         child: Container(
           margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: notification.isRead ? context.cardBg : unreadCardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: notification.isRead
-                ? context.border
-                : AppColors.orange.withValues(alpha: 0.3),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: notification.isRead ? context.cardBg : unreadCardBg,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: notification.isRead
+                  ? context.border
+                  : AppColors.orange.withValues(alpha: 0.3),
+            ),
           ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: notification.color.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                notification.icon,
-                color: notification.color,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    notification.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: notification.color,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    notification.body,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.primaryText,
-                      height: 1.35,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    notification.timeAgo,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: context.secondaryText,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (!notification.isRead) ...[
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: AppColors.orange,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                Semantics(
-                  button: true,
-                  label: 'Delete notification',
-                  child: GestureDetector(
-                    onTap: onDelete,
-                    behavior: HitTestBehavior.opaque,
-                    child: Icon(
-                      Icons.delete_outline,
-                      size: 18,
-                      color: context.secondaryText,
-                    ),
-                  ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: notification.color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
                 ),
-              ],
-            ),
-          ],
-        ),
+                child: Icon(
+                  notification.icon,
+                  color: notification.color,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notification.title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: notification.color,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      notification.body,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.primaryText,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      notification.timeAgo,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (!notification.isRead) ...[
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AppColors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  Semantics(
+                    button: true,
+                    label: 'Delete notification',
+                    child: GestureDetector(
+                      onTap: onDelete,
+                      behavior: HitTestBehavior.opaque,
+                      child: Icon(
+                        Icons.delete_outline,
+                        size: 18,
+                        color: context.secondaryText,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
