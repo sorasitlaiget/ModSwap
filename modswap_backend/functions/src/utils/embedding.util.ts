@@ -22,6 +22,7 @@ if (!API_KEY) {
   logger.warn('GEMINI_API_KEY not set — embedding generation will fail');
 }
 
+
 /** Embedding dimensionality — 768 balances quality and storage. */
 export const EMBEDDING_DIM = 768;
 

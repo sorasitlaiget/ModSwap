@@ -15,3 +15,5 @@ modswap_backend/functions/lib/
 
 # macOS
 .DS_Store
+modswap_backend/public/*
+!modswap_backend/public/action.html
