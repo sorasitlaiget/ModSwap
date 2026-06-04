@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Dev (Emulator)",
+      "request": "launch",
+      "type": "dart",
+      "program": "my_final_app/lib/main.dart",
+      "args": [
+        "--dart-define=USE_EMULATOR=true"
+      ]
+    },
+    {
+      "name": "Dev (Emulator + Real Device)",
+      "request": "launch",
+      "type": "dart",
+      "program": "my_final_app/lib/main.dart",
+      "args": [
+        "--dart-define=USE_EMULATOR=true",
+        "--dart-define=USE_REAL_DEVICE=true"
+      ]
+    },
+    {
+      "name": "Production",
+      "request": "launch",
+      "type": "dart",
+      "program": "my_final_app/lib/main.dart"
+    }
+  ]
+}

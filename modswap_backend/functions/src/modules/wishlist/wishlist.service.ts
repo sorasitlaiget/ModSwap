@@ -3,6 +3,7 @@ import { ListingResponseDto } from '../listings/dto/listings.dto';
 import { Listing } from '../listings/listings.types';
 import { NotFoundError, BadRequestError } from '../../core/errors/app-error';
 import { logger } from '../../utils/logger.util';
+import { sendNotification } from '../../utils/notification.util';
 import { WishlistRepository } from './wishlist.repository';
 import {
   WishlistCheckResponseDto,
@@ -40,6 +41,16 @@ export class WishlistService {
 
     await this.wishlistRepo.add(uid, listingId);
     logger.info('Added to wishlist', { uid, listingId });
+
+    // Fire-and-forget: notify the seller
+    sendNotification({
+      recipientUid: listing.ownerId,
+      type: 'wishlist',
+      title: 'Someone Wishlisted Your Item',
+      body: `"${listing.title}" was added to a wishlist`,
+      deepLinkTarget: `/item/${listingId}`,
+      data: { itemId: listingId },
+    }).catch(() => null);
   }
 
   /**

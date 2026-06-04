@@ -3,6 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const app_error_1 = require("../../core/errors/app-error");
 const logger_util_1 = require("../../utils/logger.util");
+const firebase_config_1 = require("../../config/firebase.config");
+const notification_util_1 = require("../../utils/notification.util");
+const constants_1 = require("../../config/constants");
+const firestore_1 = require("firebase-admin/firestore");
 /**
  * Auth Service - business logic สำหรับ profile management
  *
@@ -31,14 +35,35 @@ class AuthService {
      */
     async completeProfile(uid, email, dto) {
         console.log('👉 [ด่าน 4] เข้ามาใน Service กำลังจะหา User จาก Firestore...');
-        const user = await this.usersRepo.findById(uid);
+        let user = await this.usersRepo.findById(uid);
         console.log('👉 [ด่าน 5] หา User จาก Firestore เสร็จแล้ว!');
+        // สร้าง document ถ้า trigger ยังไม่ได้รันหลัง register
         if (!user) {
-            throw new app_error_1.NotFoundError('User profile not found');
+            logger_util_1.logger.warn('User profile missing, creating fallback document', { uid, email });
+            await this.usersRepo.create(uid, {
+                email,
+                displayName: email.split('@')[0],
+                photoURL: null,
+                lineId: null,
+                studentId: null,
+                faculty: null,
+                rating: 0,
+                totalReviews: 0,
+                totalTrades: 0,
+            });
+            await firebase_config_1.auth.setCustomUserClaims(uid, { role: 'student', kmutt: true });
+            user = await this.usersRepo.findById(uid);
+            if (!user)
+                throw new app_error_1.NotFoundError('Failed to create user profile');
         }
         // ป้องกันการเรียก complete ซ้ำ
         if (user.studentId && user.lineId) {
             throw new app_error_1.ConflictError('Profile already completed. Use update endpoint instead.', 'PROFILE_ALREADY_COMPLETED');
+        }
+        // ตรวจ studentId ซ้ำกับ user อื่น
+        const conflict = await this.usersRepo.findByStudentId(dto.studentId, uid);
+        if (conflict) {
+            throw new app_error_1.ConflictError('Student ID is already in use', 'STUDENT_ID_CONFLICT');
         }
         await this.usersRepo.update(uid, {
             displayName: dto.displayName,
@@ -54,16 +79,83 @@ class AuthService {
     }
     /**
      * แก้ไข profile (หลังจาก complete แล้ว)
+     * - เช็คเฉพาะ field ที่เปลี่ยนจริง
+     * - ตรวจ studentId ซ้ำกับ user อื่น
      */
     async updateProfile(uid, email, dto) {
-        const user = await this.usersRepo.findById(uid);
-        if (!user) {
+        const current = await this.usersRepo.findById(uid);
+        if (!current) {
             throw new app_error_1.NotFoundError('User profile not found');
         }
-        await this.usersRepo.update(uid, dto);
-        logger_util_1.logger.info('Profile updated', { uid });
+        // เอาเฉพาะ field ที่ส่งมาและมีค่าต่างจากปัจจุบัน
+        const changes = this.detectChanges(current, dto);
+        if (!changes) {
+            return this.toDto(current, email);
+        }
+        // ตรวจ studentId ซ้ำกับ user อื่น
+        if (changes.studentId) {
+            const conflict = await this.usersRepo.findByStudentId(changes.studentId, uid);
+            if (conflict) {
+                throw new app_error_1.ConflictError('Student ID is already in use', 'STUDENT_ID_CONFLICT');
+            }
+        }
+        await this.usersRepo.update(uid, changes);
+        logger_util_1.logger.info('Profile updated', { uid, fields: Object.keys(changes) });
         const updated = await this.usersRepo.findById(uid);
         return this.toDto(updated, email);
+    }
+    /**
+     * เปลี่ยน password ผ่าน Firebase Auth Admin SDK
+     */
+    async changePassword(uid, dto) {
+        await firebase_config_1.auth.updateUser(uid, { password: dto.newPassword });
+        logger_util_1.logger.info('Password changed', { uid });
+    }
+    async verifyDevice(uid, deviceId) {
+        const deviceRef = firebase_config_1.db
+            .collection(constants_1.COLLECTIONS.USERS)
+            .doc(uid)
+            .collection(constants_1.SUBCOLLECTIONS.DEVICES)
+            .doc(deviceId);
+        const snap = await deviceRef.get();
+        if (snap.exists)
+            return { isNewDevice: false };
+        // New device — save it and notify user
+        await Promise.all([
+            deviceRef.set({ addedAt: firestore_1.Timestamp.now() }),
+            (0, notification_util_1.sendNotification)({
+                recipientUid: uid,
+                type: 'securityAlert',
+                title: 'New Login Detected',
+                body: 'Login from a new device. If this wasn\'t you, secure your account.',
+                deepLinkTarget: '/security',
+            }),
+        ]);
+        logger_util_1.logger.info('New device registered', { uid, deviceId });
+        return { isNewDevice: true };
+    }
+    /**
+     * เปรียบเทียบ dto กับข้อมูลปัจจุบัน → return เฉพาะ field ที่เปลี่ยน
+     * ถ้าไม่มีอะไรเปลี่ยนเลย → return null
+     */
+    detectChanges(current, dto) {
+        const changes = {};
+        if (dto.displayName !== undefined && dto.displayName !== current.displayName) {
+            changes.displayName = dto.displayName;
+        }
+        if (dto.studentId !== undefined && dto.studentId !== current.studentId) {
+            changes.studentId = dto.studentId;
+        }
+        if (dto.faculty !== undefined && dto.faculty !== current.faculty) {
+            changes.faculty = dto.faculty;
+        }
+        if (dto.lineId !== undefined && dto.lineId !== current.lineId) {
+            changes.lineId = dto.lineId;
+        }
+        if (dto.photoURL !== undefined && dto.photoURL !== current.photoURL) {
+            changes.photoURL = dto.photoURL ?? null;
+        }
+        return Object.keys(changes).length > 0 ? changes : null;
     }
     /**
      * แปลง Domain Model → Response DTO

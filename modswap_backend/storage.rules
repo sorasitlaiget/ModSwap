@@ -1,0 +1,47 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isKmuttEmail() {
+      return isAuthenticated() &&
+             request.auth.token.email != null &&
+             request.auth.token.email.matches('.*@mail[.]kmutt[.]ac[.]th');
+    }
+
+    // Listing images: listings/{userId}/{listingId}/{fileName}
+    match /listings/{userId}/{listingId}/{fileName} {
+      allow read: if true;
+      allow write: if isKmuttEmail()
+                   && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Profile avatars: avatars/{userId}/{fileName}
+    match /avatars/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isKmuttEmail()
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Deal swap photos: deals/{userId}/{listingId}/{fileName}
+    match /deals/{userId}/{listingId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isKmuttEmail()
+                   && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

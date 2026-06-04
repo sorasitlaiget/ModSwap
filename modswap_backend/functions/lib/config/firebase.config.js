@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.auth = exports.firestore = void 0;
+exports.auth = exports.firestore = exports.db = void 0;
 const admin = __importStar(require("firebase-admin"));
 /**
  * Init Firebase Admin SDK
@@ -42,8 +42,9 @@ const admin = __importStar(require("firebase-admin"));
 if (admin.apps.length === 0) {
     admin.initializeApp();
 }
-exports.firestore = admin.firestore();
+exports.db = admin.firestore();
+exports.firestore = exports.db; // alias ไว้ใช้กับโค้ดเดิม
 exports.auth = admin.auth();
 // ตั้งค่าให้ ignore undefined fields ตอนเขียน Firestore
-exports.firestore.settings({ ignoreUndefinedProperties: true });
+exports.db.settings({ ignoreUndefinedProperties: true });
 //# sourceMappingURL=firebase.config.js.map

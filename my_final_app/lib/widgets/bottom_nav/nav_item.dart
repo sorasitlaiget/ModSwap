@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_theme_ext.dart';
 
 /// One item in the bottom NavBar (Home, My Item, Notification, Menu).
 class NavItem extends StatelessWidget {
@@ -24,12 +25,12 @@ class NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? AppColors.orange : AppColors.navy;
+    final color = isActive ? AppColors.orange : context.primaryText;
 
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        splashColor: AppColors.orange.withOpacity(0.1),
+        splashColor: AppColors.orange.withValues(alpha: 0.1),
         highlightColor: Colors.transparent,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -49,10 +50,7 @@ class NavItem extends StatelessWidget {
                     transitionBuilder: (child, animation) {
                       return ScaleTransition(
                         scale: animation,
-                        child: FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        ),
+                        child: FadeTransition(opacity: animation, child: child),
                       );
                     },
                     child: Icon(

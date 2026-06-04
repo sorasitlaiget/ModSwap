@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_theme_ext.dart';
 
 /// Header bar with KMUTT logo, MODSWAP text, and user avatar
 class HomeHeader extends StatelessWidget {
@@ -10,7 +11,7 @@ class HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: context.cardBg,
       // 🎯 แก้ตรงนี้ที่ 1: ลบ height: 70 ออก แล้วใช้ SafeArea + padding บนล่างแทน เพื่อไม่ให้ชนแบตเตอรี่
       padding: const EdgeInsets.only(left: 18, right: 18, top: 10, bottom: 10),
       child: SafeArea(
@@ -28,20 +29,18 @@ class HomeHeader extends StatelessWidget {
                   width: 50,
                   height: 50,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const SizedBox(
-                    width: 50,
-                    height: 50,
-                  ),
+                  errorBuilder: (_, _, _) =>
+                      const SizedBox(width: 50, height: 50),
                 ),
                 // 🎯 แก้ตรงนี้ที่ 2: เปลี่ยนจาก width: 8 เป็น width: 2 เพื่อให้ ModFont ขยับชิดซ้าย (ใกล้โลโก้มากขึ้น)
-                const SizedBox(width: 0), 
+                const SizedBox(width: 0),
                 // Use ModFont image if exists, else fallback to text
                 Image.asset(
                   'images/ModFont.png',
                   // 🎯 แก้ตรงนี้ที่ 3: เพิ่ม height จาก 40 เป็น 55 เพื่อให้ตัวหนังสือใหญ่ขึ้น
-                  height: 50, 
+                  height: 50,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const _ModSwapText(),
+                  errorBuilder: (_, _, _) => const _ModSwapText(),
                 ),
               ],
             ),
@@ -65,11 +64,7 @@ class HomeHeader extends StatelessWidget {
                   ],
                 ),
                 child: const Center(
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 24,
-                  ),
+                  child: Icon(Icons.person, color: Colors.white, size: 24),
                 ),
               ),
             ),
@@ -95,8 +90,14 @@ class _ModSwapText extends StatelessWidget {
           height: 1,
         ),
         children: [
-          TextSpan(text: 'MOD', style: TextStyle(color: AppColors.orange)),
-          TextSpan(text: 'Swap', style: TextStyle(color: AppColors.navy)),
+          TextSpan(
+            text: 'MOD',
+            style: TextStyle(color: AppColors.orange),
+          ),
+          TextSpan(
+            text: 'Swap',
+            style: TextStyle(color: AppColors.navy),
+          ),
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '/../theme/app_colors.dart';
+import '/../theme/app_theme_ext.dart';
 
 class HomeCategory {
   final String key;
@@ -33,7 +34,7 @@ class CategoryChips extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 7),
+        separatorBuilder: (_, _) => const SizedBox(width: 7),
         itemBuilder: (context, i) {
           final c = categories[i];
           final isActive = c.key == selectedCategory;
@@ -42,9 +43,9 @@ class CategoryChips extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
-                color: isActive ? AppColors.navy : Colors.white,
+                color: isActive ? AppColors.navy : context.cardBg,
                 border: Border.all(
-                  color: isActive ? AppColors.navy : const Color(0xFFE5E7EB),
+                  color: isActive ? AppColors.navy : context.border,
                   width: 1.5,
                 ),
                 borderRadius: BorderRadius.circular(20),
@@ -55,7 +56,7 @@ class CategoryChips extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: isActive ? Colors.white : AppColors.navy,
+                    color: isActive ? Colors.white : context.primaryText,
                   ),
                 ),
               ),

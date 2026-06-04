@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../models/user_profile.dart';
+import '../domain/entities/user_profile.dart';
 import 'dio_client.dart';
 
 /// API Service - calls Backend Cloud Functions
@@ -60,6 +60,30 @@ class ApiService {
         body: body,
       );
       return UserProfile.fromJson(data);
+    } on DioException catch (e) {
+      throw _toUserMessage(e);
+    }
+  }
+
+  /// PATCH /auth/password - Change password via backend (admin SDK, no re-auth needed)
+  Future<void> changePassword(String newPassword) async {
+    try {
+      await _client.patch<Map<String, dynamic>>(
+        '/auth/password',
+        body: {'newPassword': newPassword},
+      );
+    } on DioException catch (e) {
+      throw _toUserMessage(e);
+    }
+  }
+
+  /// POST /auth/verify-device - Check if device is new, triggers security alert if so
+  Future<void> verifyDevice(String deviceId) async {
+    try {
+      await _client.post<Map<String, dynamic>>(
+        '/auth/verify-device',
+        body: {'deviceId': deviceId},
+      );
     } on DioException catch (e) {
       throw _toUserMessage(e);
     }

@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../models/listing.dart';
+import '../domain/entities/listing.dart';
 import 'auth_service.dart';
 import 'dio_client.dart';
 
@@ -10,7 +10,7 @@ class WishlistService {
   /// Default constructor — uses DioClient with AuthService
   /// Same pattern as ListingsService.
   WishlistService({DioClient? dioClient})
-      : _dioClient = dioClient ?? DioClient(AuthService());
+    : _dioClient = dioClient ?? DioClient(AuthService());
 
   Dio get _dio => _dioClient.dio;
 
