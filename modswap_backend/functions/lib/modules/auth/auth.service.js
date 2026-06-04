@@ -35,10 +35,26 @@ class AuthService {
      */
     async completeProfile(uid, email, dto) {
         console.log('👉 [ด่าน 4] เข้ามาใน Service กำลังจะหา User จาก Firestore...');
-        const user = await this.usersRepo.findById(uid);
+        let user = await this.usersRepo.findById(uid);
         console.log('👉 [ด่าน 5] หา User จาก Firestore เสร็จแล้ว!');
+        // สร้าง document ถ้า trigger ยังไม่ได้รันหลัง register
         if (!user) {
-            throw new app_error_1.NotFoundError('User profile not found');
+            logger_util_1.logger.warn('User profile missing, creating fallback document', { uid, email });
+            await this.usersRepo.create(uid, {
+                email,
+                displayName: email.split('@')[0],
+                photoURL: null,
+                lineId: null,
+                studentId: null,
+                faculty: null,
+                rating: 0,
+                totalReviews: 0,
+                totalTrades: 0,
+            });
+            await firebase_config_1.auth.setCustomUserClaims(uid, { role: 'student', kmutt: true });
+            user = await this.usersRepo.findById(uid);
+            if (!user)
+                throw new app_error_1.NotFoundError('Failed to create user profile');
         }
         // ป้องกันการเรียก complete ซ้ำ
         if (user.studentId && user.lineId) {

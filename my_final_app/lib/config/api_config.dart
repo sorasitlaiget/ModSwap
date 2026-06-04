@@ -8,12 +8,15 @@ class ApiConfig {
   static const String projectId = 'modswap-7b425';
   static const String region = 'asia-southeast1';
 
-  /// Set to false when deploying to production
-  static const bool useEmulator = true;
+  /// ใช้ --dart-define=USE_EMULATOR=true เมื่อรัน dev กับ emulator
+  /// production build จะเป็น false โดยอัตโนมัติ
+  static const bool useEmulator =
+      bool.fromEnvironment('USE_EMULATOR', defaultValue: false);
 
-  /// Set to true เมื่อทดสอบกับมือถือจริง (ไม่ใช่ Simulator)
+  /// ใช้ --dart-define=USE_REAL_DEVICE=true เมื่อทดสอบกับมือถือจริง
   /// emulator ต้องรันด้วย: firebase emulators:start --host 0.0.0.0
-  static const bool useRealDevice = false;
+  static const bool useRealDevice =
+      bool.fromEnvironment('USE_REAL_DEVICE', defaultValue: false);
   static const String _lanIp = '192.168.1.146';
 
   static String _resolveHost() {
